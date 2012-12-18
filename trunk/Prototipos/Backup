@@ -1,0 +1,760 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Xml.Serialization;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+
+namespace PruebasMarkov {
+   [Serializable]
+   public abstract class Estado {
+	  public int id;
+
+	  public abstract Estado[] proximosEstados();
+	  public abstract Accion[] accionesValidas();
+	  public abstract Estado transicionAccion(Accion a);
+   }
+   [Serializable]
+   public abstract class Accion {
+	  public int id;
+   }
+   [Serializable]
+   public abstract class Transicion<S, A> {
+	  public abstract float valor(A a, S s, S sp);
+   }
+   [Serializable]
+   public abstract class Recompensa<S, A> {
+	  public abstract float valor(A a, S s, S sp);
+   }
+
+   public class MDP2<S, A, T, R>
+	  where S : Estado
+	  where A : Accion
+	  where T : Transicion<S, A>
+	  where R : Recompensa<S, A> {
+	  public List<S> estados;
+	  public List<A> acciones;
+	  public T transicion;
+	  public R recompensa;
+	  public float factor_descuento;
+
+	  public float[] Utilidad;
+	  public A[] Politica;
+
+	  public MDP2(S[] est, A[] acs, T trn, R rep, float fac) {
+		 estados = new List<S>(est);
+		 for (int i = 0; i < estados.Count; i++)
+			estados[i].id = i;
+		 acciones = new List<A>(acs);
+		 for (int j = 0; j < acciones.Count; j++)
+			acciones[j].id = j;
+		 transicion = trn;
+		 recompensa = rep;
+		 factor_descuento = fac;
+	  }
+
+
+	  public void Calcular_Utilidad_VI() {
+		 float[] Utilidad_Aux = new float[estados.Count];
+		 foreach (S i in estados) {
+			Utilidad_Aux[i.id] = 2;
+		 }
+	  }
+   }
+
+   public class MDP<S, A, T, R>
+	  where S : Estado
+	  where A : Accion
+	  where T : Transicion<S, A>
+	  where R : Recompensa<S, A> {
+	  public List<S> estados;
+	  public List<A> acciones;
+	  public T transicion;
+	  public R recompensa;
+
+	  private float factor_descuento;
+	  private float[] VEstrella;
+	  private float[][] QEstrella;
+
+	  public MDP(S[] est, A[] acs, T trn, R rep, float fac) {
+		 estados = new List<S>(est);
+		 for (int i = 0; i < estados.Count; i++)
+			estados[i].id = i;
+		 acciones = new List<A>(acs);
+		 for (int j = 0; j < acciones.Count; j++)
+			acciones[j].id = j;
+		 transicion = trn;
+		 recompensa = rep;
+		 factor_descuento = fac;
+
+		 Console.WriteLine("Iniciando VEstrella");
+		 calcularVEstrella(10);
+		 Console.WriteLine("Iniciando QEstrella");
+		 calcularQEstrella();
+
+		 //QRecursivoInicial();
+	  }
+
+	  public float VE(S estado) {
+		 return VEstrella[estado.id];
+	  }
+
+	  public float QE(S estado, A accion) {
+		 return QEstrella[estado.id][accion.id];
+	  }
+
+	  private void calcularVEstrella(int tmax) {
+		 bool[] termino = new bool[estados.Count];
+		 float[][] V = new float[2][];
+		 V[0] = new float[estados.Count];
+		 V[1] = new float[estados.Count];
+
+		 for (int i = 0; i < termino.Length; i++)
+			termino[i] = false;
+
+		 for (int t = 0; t < tmax; t++) {
+			foreach (S s in estados) {
+			   if (!termino[s.id]) {
+				  float suma_maxima = float.MinValue;
+				  foreach (A a in s.accionesValidas()) {
+					 float suma = 0;
+					 foreach (S sp in s.proximosEstados()) {
+						float transvalor = transicion.valor(a, s, sp);
+						if (transvalor != 0)
+						   suma += transvalor * (recompensa.valor(a, s, sp) + factor_descuento * V[t % 2][sp.id]);
+					 }
+					 if (suma > suma_maxima)
+						suma_maxima = suma;
+				  }
+				  V[(t + 1) % 2][s.id] = suma_maxima;
+				  termino[s.id] = (V[0][s.id] == V[1][s.id]);
+			   }
+			}
+		 }
+		 VEstrella = V[tmax % 2];
+	  }
+
+	  private void calcularQEstrella() {
+		 QEstrella = new float[estados.Count][];
+		 foreach (S s in estados) {
+			QEstrella[s.id] = new float[acciones.Count];
+			foreach (A a in s.accionesValidas()) {
+			   float suma = 0;
+			   foreach (S sp in s.proximosEstados()) {
+				  float transvalor = transicion.valor(a, s, sp);
+				  if (transvalor != 0)
+					 suma += transvalor * (recompensa.valor(a, s, sp) + factor_descuento * VEstrella[sp.id]);
+			   }
+
+			   QEstrella[s.id][a.id] = suma;
+			}
+		 }
+	  }
+
+	  public void QRecursivoInicial() {
+		 QEstrella = new float[estados.Count][];
+
+		 foreach (S s in estados) {
+			QEstrella[s.id] = new float[acciones.Count];
+			foreach (A a in s.accionesValidas()) {
+			   S sp = (S)s.transicionAccion((Accion)a);
+			   if (sp != null) {
+				  QEstrella[s.id][a.id] = transicion.valor(a, s, sp);
+			   }
+			}
+		 }
+	  }
+
+	  float razon_aprendizaje = 0.75f;
+	  public float QRecursivo(S estado, A accion) {
+		 float valor_antiguo = QEstrella[estado.id][accion.id];
+		 S proximo_estado = (S)estado.transicionAccion(accion);
+		 if (proximo_estado != null) {
+			float recsa = recompensa.valor(accion, estado, proximo_estado);
+			Estado[] proximos_estados = estado.proximosEstados();
+			Accion[] proximas_acciones = estado.accionesValidas();
+
+			float max_valor_futuro = 0;
+			foreach (S sp in proximos_estados) {
+			   foreach (A a in sp.accionesValidas()) {
+				  float valor_futuro = QRecursivo(sp, a);
+				  max_valor_futuro = Math.Max(max_valor_futuro, valor_futuro);
+			   }
+			}
+
+			return valor_antiguo + razon_aprendizaje * ((recsa + factor_descuento * max_valor_futuro) - valor_antiguo);
+		 }
+		 else {
+			return 0;
+		 }
+	  }
+   }
+
+   public struct Posicion {
+	  public int x, y;
+   }
+
+   [Serializable]
+   public class EstadoJuego : Estado {
+	  public List<EstadoJuego> padres;
+	  public List<EstadoJuego> hijos;
+	  public List<AccionJuego> acciones_padres;
+	  public List<AccionJuego> acciones_hijos;
+
+	  public bool estado_ganador;
+	  public int ganador;
+
+	  public int clave_horizonal;
+	  public int clave_vertical;
+
+	  public EstadoJuego()
+		 : base() {
+
+	  }
+
+	  public override Estado transicionAccion(Accion a) {
+		 int indice = acciones_hijos.IndexOf((AccionJuego)a);
+		 if (indice >= 0) {
+			return hijos[indice];
+		 }
+		 else {
+			return null;
+		 }
+	  }
+
+	  public override Estado[] proximosEstados() {
+		 return hijos.ToArray();
+	  }
+
+	  public override Accion[] accionesValidas() {
+		 return acciones_hijos.ToArray();
+	  }
+
+	  public int clave(int jugador) {
+		 switch (jugador) {
+			case Juego.PA1:
+			   return 1;
+			case Juego.PA2:
+			   return 1;
+			case Juego.PB:
+			   return 2;
+			case Juego.vacio:
+			   return 4;
+			default:
+			   return 0;
+		 }
+	  }
+
+	  public int calcularClaveHorizontal(int[][] tablero) {
+		 int valor = 0;
+		 for (int i = 0; i < tablero.Length; i++) {
+			int suma = 0;
+			for (int j = 0; j < tablero[0].Length; j++)
+			   suma += clave(tablero[i][j]);
+			valor += suma * (int)Math.Pow(2, i * tablero[i].Length);
+		 }
+
+		 return valor;
+	  }
+
+	  public int calcularClaveVertical(int[][] tablero) {
+		 int[] suma = new int[tablero[0].Length];
+		 for (int i = 0; i < tablero.Length; i++)
+			for (int j = 0; j < tablero[0].Length; j++)
+			   suma[j] += clave(tablero[i][j]);
+
+		 int valor = 0;
+		 for (int i = 0; i < tablero[0].Length; i++)
+			valor += suma[i] * (int)Math.Pow(2, i * tablero.Length);
+
+		 return valor;
+	  }
+
+	  public int calcularClaveHorizontal(int clavePadre, int p1y, int p2y, int p3y, int ancho) {
+		 int claveh = clavePadre;
+		 claveh += (-3 * (int)Math.Pow(2, p1y * ancho)) + (-3 * (int)Math.Pow(2, p2y * ancho)) + (-2 * (int)Math.Pow(2, p3y * ancho));
+		 return claveh;
+	  }
+
+	  public int calcularClaveVertical(int clavePadre, int p1x, int p2x, int p3x, int alto) {
+		 int clavev = clavePadre;
+		 clavev += (-3 * (int)Math.Pow(2, p1x * alto)) + (-3 * (int)Math.Pow(2, p2x * alto)) + (-2 * (int)Math.Pow(2, p3x * alto));
+		 return clavev;
+	  }
+
+	  public int buscarDistanciaGanador(int maxdist, int equipo) {
+		 if ((estado_ganador) && (ganador == equipo))
+			return 0;
+		 else if (maxdist > 1) {
+			int menor_distancia = int.MaxValue - 1;
+			foreach (EstadoJuego estadoh in hijos) {
+			   int distancia = estadoh.buscarDistanciaGanador(maxdist - 1, equipo);
+			   menor_distancia = Math.Min(menor_distancia, distancia);
+			}
+			return (menor_distancia + 1);
+		 }
+		 return int.MaxValue;
+	  }
+   }
+
+   [Serializable]
+   public class AccionJuego : Accion {
+	  public int columnaPA1;
+	  public int columnaPA2;
+	  public int columnaPB;
+
+	  public AccionJuego(int p1, int p2, int p3) {
+		 columnaPA1 = p1;
+		 columnaPA2 = p2;
+		 columnaPB = p3;
+	  }
+   }
+
+   [Serializable]
+   public class TransicionJuego : Transicion<EstadoJuego, AccionJuego> {
+	  public override float valor(AccionJuego a, EstadoJuego s, EstadoJuego sp) {
+		 int indice = sp.padres.IndexOf(s);
+		 if ((indice > 0) && (sp.acciones_padres[indice] == a))
+			return 1;
+		 else
+			return 0;
+	  }
+   }
+
+   [Serializable]
+   public class RecompensaJuego : Recompensa<EstadoJuego, AccionJuego> {
+	  public override float valor(AccionJuego a, EstadoJuego s, EstadoJuego sp) {
+		 int indice = sp.padres.IndexOf(s);
+		 if ((indice > 0) && (sp.acciones_padres[indice] == a)) {
+			int distancia_ganar = sp.buscarDistanciaGanador(1, Juego.EA);
+			return (1.0f / (distancia_ganar + 1));
+		 }
+		 else {
+			return 0;
+		 }
+	  }
+   }
+
+   public class Juego {
+	  public const int PA1 = 100;
+	  public const char SA1 = 'X';
+	  public const int PA2 = 101;
+	  public const char SA2 = 'x';
+	  public const int PB = 200;
+	  public const char SB = 'O';
+	  public const int vacio = 0;
+	  public const int EA = 1;
+	  public const int EB = 2;
+	  public int[][] tablero;
+
+	  public int[] orden = new int[] { PA1, PB, PA2, PB };
+	  public int turno;
+
+	  public Juego(int ancho, int alto) {
+		 tablero = new int[alto][];
+		 for (int i = 0; i < alto; i++) {
+			tablero[i] = new int[ancho];
+		 }
+
+		 turno = 0;
+	  }
+
+	  public int equipo(int jugador) {
+		 switch (jugador) {
+			case PA1:
+			   return EA;
+			case PA2:
+			   return EA;
+			case PB:
+			   return EB;
+			default:
+			   return -1;
+		 }
+	  }
+
+	  public int[][] duplicarTablero() {
+		 int[][] copia_tablero = new int[tablero.Length][];
+		 for (int i = 0; i < tablero.Length; i++) {
+			copia_tablero[i] = new int[tablero[0].Length];
+			for (int j = 0; j < tablero[0].Length; j++) {
+			   copia_tablero[i][j] = tablero[i][j];
+			}
+		 }
+
+		 return copia_tablero;
+	  }
+
+	  public bool chequearValidez(int col) {
+		 return (tablero[0][col] == vacio);
+	  }
+
+	  public int esperarJugada() {
+		 int col = int.Parse(Console.ReadLine());
+		 return col;
+	  }
+
+	  public int hacerJugada(int col, int jugador) {
+		 int fila = 0;
+		 int fila_anterior = -1;
+		 while ((fila < tablero.Length) && (tablero[fila][col] == vacio)) {
+			fila_anterior = fila;
+			fila++;
+		 }
+		 tablero[fila_anterior][col] = jugador;
+		 return fila_anterior;
+	  }
+
+	  public bool chequearVictoria(int fila, int col) {
+		 int bandojugado = equipo(tablero[fila][col]);
+		 int maxcol = Math.Min(col + 3, tablero[0].Length - 1);
+		 int mincol = Math.Max(col - 3, 0);
+		 int maxfila = Math.Min(fila + 3, tablero.Length - 1);
+		 int minfila = Math.Max(fila - 3, 0);
+
+		 int secuencia = 0;
+
+		 secuencia = 0;
+		 for (int icol = mincol; icol <= maxcol; icol++) {
+			if (equipo(tablero[fila][icol]) == bandojugado)
+			   secuencia++;
+			else
+			   secuencia = 0;
+
+			//Console.Write("[" + fila + ";" + icol + "]");
+
+			if (secuencia >= 4)
+			   return true;
+		 }
+		 //Console.WriteLine();
+
+		 secuencia = 0;
+		 for (int ifila = minfila; ifila <= maxfila; ifila++) {
+			if (equipo(tablero[ifila][col]) == bandojugado)
+			   secuencia++;
+			else
+			   secuencia = 0;
+
+			//Console.Write("[" + ifila + ";" + col + "]");
+
+			if (secuencia >= 4)
+			   return true;
+		 }
+		 //Console.WriteLine();
+
+		 secuencia = 0;
+		 int jfila = fila - Math.Min(fila - minfila, col - mincol);
+		 int jcol = col - Math.Min(fila - minfila, col - mincol);
+		 for (int i = 0; i <= Math.Min(maxfila - fila, maxcol - col) + Math.Min(fila - minfila, col - mincol); i++) {
+			if (equipo(tablero[jfila + i][jcol + i]) == bandojugado)
+			   secuencia++;
+			else
+			   secuencia = 0;
+
+			//Console.Write("[" + (jfila + i) + ";" + (jcol + i) + "]");
+
+			if (secuencia >= 4)
+			   return true;
+		 }
+		 //Console.WriteLine();
+
+
+		 secuencia = 0;
+		 jfila = fila + Math.Min(maxfila - fila, col - mincol);
+		 jcol = col - Math.Min(maxfila - fila, col - mincol);
+		 for (int i = 0; i <= Math.Min(fila - minfila, maxcol - col) + Math.Min(maxfila - fila, col - mincol); i++) {
+			if (equipo(tablero[jfila - i][jcol + i]) == bandojugado)
+			   secuencia++;
+			else
+			   secuencia = 0;
+
+			//Console.Write("[" + (jfila - i) + ";" + (jcol + i) + "]");
+
+			if (secuencia >= 4)
+			   return true;
+		 }
+		 //Console.WriteLine();
+
+		 return false;
+	  }
+
+	  public bool GameLoop() {
+		 int mano = orden[turno % orden.Length];
+		 int columna = -1;
+		 bool jugada_valida = false;
+		 while (!jugada_valida) {
+			switch (mano) {
+			   case PA1:
+				  columna = esperarJugada();
+				  break;
+			   case PA2:
+				  columna = esperarJugada();
+				  break;
+			   case PB:
+				  Random R = new Random();
+				  columna = R.Next(1, tablero[0].Length + 1);
+				  break;
+			}
+
+			jugada_valida = chequearValidez(columna - 1);
+		 }
+
+		 int fila = hacerJugada(columna - 1, mano);
+		 turno++;
+		 return chequearVictoria(fila, columna - 1);
+	  }
+
+	  public char getSimbolo(int v) {
+		 switch (v) {
+			case PA1:
+			   return SA1;
+			case PA2:
+			   return SA2;
+			case PB:
+			   return SB;
+			default:
+			   return ' ';
+		 }
+	  }
+
+	  public void imprimirTablero() {
+		 Console.WriteLine();
+		 Console.WriteLine();
+
+		 Console.Write("      ");
+		 for (int col = 0; col < tablero[0].Length; col++) {
+			Console.Write((col + 1) + " ");
+		 }
+		 Console.WriteLine();
+
+		 for (int fil = 0; fil < tablero.Length; fil++) {
+			Console.Write("     ");
+			Console.Write("-");
+			for (int col = 0; col < tablero[fil].Length; col++) {
+			   Console.Write("--");
+			}
+			Console.WriteLine();
+
+			Console.Write("   " + (fil + 1) + " ");
+			for (int col = 0; col < tablero[fil].Length; col++) {
+			   Console.Write("|");
+			   Console.Write(getSimbolo(tablero[fil][col]));
+			}
+			Console.Write("|");
+			Console.WriteLine();
+		 }
+		 Console.Write("     ");
+		 Console.Write("-");
+		 for (int col = 0; col < tablero[0].Length; col++) {
+			Console.Write("--");
+		 }
+		 Console.WriteLine();
+	  }
+   }
+
+   public class Resolucion {
+	  public int ancho_tablero;
+	  public int alto_tablero;
+	  public Juego juego;
+
+	  public Resolucion(int ancho, int alto) {
+		 ancho_tablero = ancho;
+		 alto_tablero = alto;
+		 juego = new Juego(ancho, alto);
+	  }
+
+	  public AccionJuego[] prepararAcciones() {
+		 AccionJuego[] acciones = new AccionJuego[(int)Math.Pow(ancho_tablero, 3)];
+		 int indice = 0;
+		 for (int i = 0; i < ancho_tablero; i++) {
+			for (int j = 0; j < ancho_tablero; j++) {
+			   for (int q = 0; q < ancho_tablero; q++) {
+				  acciones[indice] = new AccionJuego(i, j, q);
+				  indice++;
+			   }
+			}
+		 }
+		 return acciones;
+	  }
+
+	  public EstadoJuego[] prepararEstados(AccionJuego[] acciones) {
+		 List<EstadoJuego> estados_list = new List<EstadoJuego>();
+		 Dictionary<int, Dictionary<int, EstadoJuego>> estados = new Dictionary<int, Dictionary<int, EstadoJuego>>();
+		 EstadoJuego estado_inicial = new EstadoJuego();
+		 estado_inicial.padres = null;
+		 estado_inicial.hijos = new List<EstadoJuego>();
+		 estado_inicial.acciones_hijos = new List<AccionJuego>();
+		 estado_inicial.acciones_padres = null;
+		 estado_inicial.estado_ganador = false;
+
+		 Juego juego_base = new Juego(ancho_tablero, alto_tablero);
+
+		 Queue<EstadoJuego> cola_estados = new Queue<EstadoJuego>();
+		 Queue<int[][]> cola_juegos = new Queue<int[][]>();
+		 cola_estados.Enqueue(estado_inicial);
+		 cola_juegos.Enqueue(juego_base.tablero);
+
+		 Dictionary<int, EstadoJuego> llave_estado = new Dictionary<int, EstadoJuego>();
+		 int claveVertical, claveHorizontal;
+		 claveVertical = estado_inicial.calcularClaveVertical(juego_base.tablero);
+		 claveHorizontal = estado_inicial.calcularClaveHorizontal(juego_base.tablero);
+		 estado_inicial.clave_horizonal = claveHorizontal;
+		 estado_inicial.clave_vertical = claveVertical;
+		 llave_estado.Add(claveHorizontal, estado_inicial);
+		 estados.Add(claveVertical, llave_estado);
+		 estados_list.Add(estado_inicial);
+
+		 int contador = 0;
+		 while (cola_estados.Count > 0) {
+			EstadoJuego estado_actual = cola_estados.Dequeue();
+			int[][] juego_actual = cola_juegos.Dequeue();
+			foreach (AccionJuego accion in acciones) {
+			   juego_base.tablero = juego_actual;
+			   int[][] juego_hijo = juego_base.duplicarTablero();
+			   juego_base.tablero = juego_hijo;
+
+			   int filaPA1, filaPA2, filaPB;
+			   bool estado_ganador = false;
+			   int ganador = 0;
+
+			   if (juego_base.chequearValidez(accion.columnaPA1)) {
+				  filaPA1 = juego_base.hacerJugada(accion.columnaPA1, Juego.PA1);
+				  if (!estado_ganador) {
+					 estado_ganador = juego_base.chequearVictoria(filaPA1, accion.columnaPA1);
+					 ganador = Juego.EA;
+				  }
+			   }
+			   else
+				  continue;
+
+			   if (juego_base.chequearValidez(accion.columnaPB)) {
+				  filaPB = juego_base.hacerJugada(accion.columnaPB, Juego.PB);
+				  if (!estado_ganador) {
+					 estado_ganador = juego_base.chequearVictoria(filaPB, accion.columnaPB);
+					 ganador = Juego.EB;
+				  }
+			   }
+			   else
+				  continue;
+
+			   if (juego_base.chequearValidez(accion.columnaPA2)) {
+				  filaPA2 = juego_base.hacerJugada(accion.columnaPA2, Juego.PA2);
+				  if (!estado_ganador) {
+					 estado_ganador = juego_base.chequearVictoria(filaPA2, accion.columnaPA2);
+					 ganador = Juego.EA;
+				  }
+			   }
+			   else
+				  continue;
+
+			   EstadoJuego estado_hijo = null;
+			   claveHorizontal = estado_actual.calcularClaveHorizontal(estado_actual.clave_horizonal, filaPA1, filaPA2, filaPB, ancho_tablero);
+			   claveVertical = estado_actual.calcularClaveVertical(estado_actual.clave_vertical, accion.columnaPA1, accion.columnaPA2, accion.columnaPB, alto_tablero);
+			   if (!estados.TryGetValue(claveVertical, out llave_estado)) {
+				  llave_estado = new Dictionary<int, EstadoJuego>();
+				  estados.Add(claveVertical, llave_estado);
+			   }
+			   if (!llave_estado.TryGetValue(claveHorizontal, out estado_hijo)) {
+				  estado_hijo = new EstadoJuego();
+				  estado_hijo.padres = new List<EstadoJuego>();
+				  estado_hijo.hijos = new List<EstadoJuego>();
+				  estado_hijo.acciones_hijos = new List<AccionJuego>();
+				  estado_hijo.acciones_padres = new List<AccionJuego>();
+				  estado_hijo.clave_horizonal = claveHorizontal;
+				  estado_hijo.clave_vertical = claveVertical;
+				  estado_hijo.estado_ganador = estado_ganador;
+				  estado_hijo.ganador = ganador;
+
+				  estados_list.Add(estado_hijo);
+				  cola_estados.Enqueue(estado_hijo);
+				  cola_juegos.Enqueue(juego_base.tablero);
+				  llave_estado.Add(claveHorizontal, estado_hijo);
+			   }
+
+			   estado_actual.hijos.Add(estado_hijo);
+			   estado_actual.acciones_hijos.Add(accion);
+			   estado_hijo.padres.Add(estado_actual);
+			   estado_hijo.acciones_padres.Add(accion);
+			}
+			contador++;
+			Console.WriteLine("Estados procesados: " + contador);
+
+		 }
+
+		 return estados_list.ToArray();
+	  }
+
+	  public void GuardarEstados(EstadoJuego[] objetos) {
+		 string path = "./estados.xml";
+		 FileStream outfile = File.Create(path);
+		 var formatter = new BinaryFormatter();
+		 formatter.Serialize(outfile, objetos);
+	  }
+
+	  public EstadoJuego[] CargarEstados() {
+		 string path = "./estados.xml";
+		 FileStream infile = File.Open(path, FileMode.Open);
+		 var formatter = new BinaryFormatter();
+		 return (EstadoJuego[])formatter.Deserialize(infile);
+	  }
+
+	  public void GuardarAcciones(AccionJuego[] objetos) {
+		 string path = "./acciones.xml";
+		 FileStream outfile = File.Create(path);
+		 var formatter = new BinaryFormatter();
+		 formatter.Serialize(outfile, objetos);
+	  }
+
+	  public AccionJuego[] CargarAcciones() {
+		 string path = "./acciones.xml";
+		 FileStream infile = File.Open(path, FileMode.Open);
+		 var formatter = new BinaryFormatter();
+		 return (AccionJuego[])formatter.Deserialize(infile);
+	  }
+
+	  public MDP<EstadoJuego, AccionJuego, TransicionJuego, RecompensaJuego> prepararMDP() {
+		 AccionJuego[] acciones = prepararAcciones();
+		 //AccionJuego[] acciones = CargarAcciones();
+		 EstadoJuego[] estados = prepararEstados(acciones);
+		 //EstadoJuego[] estados = CargarEstados();
+
+		 TransicionJuego transicion = new TransicionJuego();
+		 RecompensaJuego recompensa = new RecompensaJuego();
+
+		 //GuardarAcciones(acciones);
+		 //GuardarEstados(estados);
+
+		 Console.WriteLine("Creando la MDP");
+		 MDP<EstadoJuego, AccionJuego, TransicionJuego, RecompensaJuego> mdp = new MDP<EstadoJuego, AccionJuego, TransicionJuego, RecompensaJuego>(estados, acciones, transicion, recompensa, 0.25f);
+		 return mdp;
+	  }
+   }
+
+   class Program {
+	  static void Main(string[] args) {
+		 /*
+			Juego juego = new Juego(5, 4);
+			juego.imprimirTablero();
+			while (!juego.GameLoop()) {
+			   juego.imprimirTablero();
+			}
+			juego.imprimirTablero();
+			Console.WriteLine("Fin del juego.");
+			Console.ReadLine();
+		  * */
+		 TimeSpan inicio = DateTime.Now.TimeOfDay;
+		 Resolucion res = new Resolucion(2, 4);
+		 //res.GuardarEstados(new EstadoJuego[] { new EstadoJuego(), new EstadoJuego() });
+		 MDP<EstadoJuego, AccionJuego, TransicionJuego, RecompensaJuego> mdp = res.prepararMDP();
+
+		 EstadoJuego estado_inicial = mdp.estados[4];
+		 foreach (AccionJuego accion in mdp.acciones) {
+			//Console.WriteLine("Accion: " + accion.id + ", " + mdp.QRecursivo(estado_inicial, accion));
+			Console.WriteLine("Accion: " + accion.id + ", " + mdp.QE(estado_inicial, accion));
+
+		 }
+		 TimeSpan fin = DateTime.Now.TimeOfDay;
+		 Console.WriteLine((fin - inicio).TotalMinutes);
+		 Console.ReadLine();
+	  }
+   }
+}
