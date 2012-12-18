@@ -21,7 +21,7 @@ namespace PruebasMarkov2 {
 		 }
 	  }
 
-	  public class RecompensaJuego : Recompensa_MDP<Arbol_Estados.Nodo_Estado> {
+	  public class RecompensaJuego : Recompensa_MDP<Arbol_Estados.Nodo_Estado, Juego.Objetivo> {
 		 Juego.Objetivo[] objetivos;
 
 		 public RecompensaJuego(ref Juego.Objetivo[] objs)
@@ -29,16 +29,14 @@ namespace PruebasMarkov2 {
 			objetivos = objs;
 		 }
 
-		 public override float valor(Arbol_Estados.Nodo_Estado s) {
+		 public override float valor(Arbol_Estados.Nodo_Estado s, Juego.Objetivo o) {
 			float resultado = (s.estado_actual.objetivos_cumplidos.Count - s.estado_actual.objetivos_no_cumplidos.Count);
-			foreach (Juego.Objetivo objetivo in objetivos) {
-			   if (s.estado_actual.objetivos_no_cumplidos.Contains(objetivo.id)) {
-				  float distancia = float.MaxValue;
-				  foreach (Vector2 posicion_jugador in s.estado_actual.posicion_jugadores.Values) {
-					 distancia = Math.Min(distancia, posicion_jugador.distancia_directa(objetivo.posicion));
-				  }
-				  resultado -= distancia;
+			if (s.estado_actual.objetivos_no_cumplidos.Contains(o.id)) {
+			   float distancia = float.MaxValue;
+			   foreach (Vector2 posicion_jugador in s.estado_actual.posicion_jugadores.Values) {
+				  distancia = Math.Min(distancia, posicion_jugador.distancia_directa(o.posicion));
 			   }
+			   resultado -= distancia;
 			}
 
 			return resultado;

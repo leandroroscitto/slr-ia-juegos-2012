@@ -435,13 +435,20 @@ namespace PruebasMarkov2 {
 		 informacion += "Acciones posibles:\n";
 		 foreach (Jugador jugador in jugadores) {
 			informacion += "  " + jugador.nombre + "\n";
-			informacion += "      ";
+			informacion += "  ";
 			foreach (Accion accion in nodo_estado_actual.acciones_hijos) {
-			   if (accion.jugador.id == jugador.id)
-				  if (resolucion.mdp.Politica[jugador.id][nodo_estado_actual.estado_actual.id] == accion)
-					 informacion += accion.direccion + "(*) ";
-				  else
+			   if (accion.jugador.id == jugador.id) {
+				  bool impreso = false;
+				  foreach (Objetivo objetivo in objetivos) {
+					 if (resolucion.mdp.Politica[jugador.id][objetivo.id][nodo_estado_actual.estado_actual.id] == accion) {
+						informacion += accion.direccion + "(" + objetivo.representacion + ") ";
+						impreso = true;
+					 }
+				  }
+
+				  if (!impreso)
 					 informacion += accion.direccion + " ";
+			   }
 			}
 			informacion += "\n";
 		 }
@@ -453,7 +460,7 @@ namespace PruebasMarkov2 {
 		 TCODConsole.root.printFrame(offsety - 1, offsetx - 1, ancho + 2, alto + 2, false, TCODBackgroundFlag.Alpha, "Escenario");
 
 		 TCODConsole.root.printFrame(offsetx + ancho + 1, offsety - 1, ancho_ventana - (offsetx + ancho + 2), alto + 2, false, TCODBackgroundFlag.Alpha, "Informacion");
-		 TCODConsole.root.printRect(offsetx + ancho + 2, offsety, ancho_ventana - (offsetx + ancho), alto, GetInformacion());
+		 TCODConsole.root.printRect(offsetx + ancho + 2, offsety, ancho_ventana - (offsetx + ancho + 1), alto, GetInformacion());
 
 		 TCODConsole.root.printFrame(offsetx - 1, offsety + alto + 1, ancho_ventana - 2, alto_ventana - (offsety + alto + 2), false, TCODBackgroundFlag.Alpha, "Acciones");
 		 TCODConsole.root.printRect(offsetx, offsety + alto + 2, ancho_ventana - 3, alto_ventana - (offsety + alto + 3), GetAccionesLog());
@@ -553,8 +560,8 @@ namespace PruebasMarkov2 {
 		 Accion.direccion_complementaria.Add(TDireccion.DR, TDireccion.UL);
 		 Accion.direccion_complementaria.Add(TDireccion.DL, TDireccion.UR);
 
-		 int ancho = 16;
-		 int alto = 16;
+		 int ancho = 20;
+		 int alto = 14;
 
 		 Juego juego = new Juego(ancho, alto, 2, 4);
 	  }
