@@ -46,7 +46,7 @@ namespace PruebasMarkov2 {
 	  }
 
 	  public Arbol_Estados arbol_estados;
-	  public MDP<Arbol_Estados.Nodo_Estado, Accion, TransicionJuego, RecompensaJuego> mdp;
+	  public MDP<Arbol_Estados.Nodo_Estado, Accion, Juego.Objetivo, TransicionJuego, RecompensaJuego> mdp;
 
 	  public ResolucionMDP(ref Arbol_Estados ae) {
 		 arbol_estados = ae;
@@ -55,7 +55,7 @@ namespace PruebasMarkov2 {
 
 		 Arbol_Estados.Nodo_Estado[] estados = arbol_estados.estados.ToArray();
 		 Accion[] acciones = arbol_estados.acciones_individuales.ToArray();
-		 mdp = new MDP<Arbol_Estados.Nodo_Estado, Accion, TransicionJuego, RecompensaJuego>(estados, acciones, arbol_estados.jugadores.Length, transicion, recompensa, 0.65f);
+		 mdp = new MDP<Arbol_Estados.Nodo_Estado, Accion, Juego.Objetivo, TransicionJuego, RecompensaJuego>(estados, acciones, arbol_estados.objetivos, arbol_estados.jugadores.Length, transicion, recompensa, 0.65f);
 	  }
    }
 }

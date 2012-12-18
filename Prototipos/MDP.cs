@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 
 namespace PruebasMarkov2 {
-   [Serializable]
    public abstract class Estado_MDP {
 	  public int id;
 
@@ -12,42 +11,50 @@ namespace PruebasMarkov2 {
 	  public abstract Accion_MDP[] accionesValidas();
 	  public abstract Estado_MDP transicionAccion(Accion_MDP a);
    }
-   [Serializable]
    public abstract class Accion_MDP {
 	  public int id;
 	  public int actor;
    }
-   [Serializable]
+   public interface Objetivo_MDP {
+	  int GetID();
+   }
    public abstract class Transicion_MDP<S, A> {
 	  public abstract float valor(A a, S s, S sp);
    }
-   [Serializable]
    public abstract class Recompensa_MDP<S> {
 	  public abstract float valor(S s);
    }
 
-   public class MDP<S, A, T, R>
+   public class MDP<S, A, O, T, R>
 	  where S : Estado_MDP
 	  where A : Accion_MDP
+	  where O : Objetivo_MDP
 	  where T : Transicion_MDP<S, A>
 	  where R : Recompensa_MDP<S> {
 	  public List<S> estados;
 	  public List<A> acciones;
+	  public List<O> objetivos;
 	  public int numero_actores;
 	  public T transicion;
 	  public R recompensa;
 	  public float factor_descuento;
 
+	  // <jugador_id, objetivo_id, estado_id>
 	  public float[][] Utilidad;
 	  public A[][] Politica;
 
-	  public MDP(S[] est, A[] acs, int na, T trn, R rep, float fac) {
+	  public MDP(S[] est, A[] acs, O[] objs, int na, T trn, R rep, float fac) {
 		 estados = new List<S>(est);
 		 for (int i = 0; i < estados.Count; i++)
 			estados[i].id = i;
 		 acciones = new List<A>(acs);
 		 for (int j = 0; j < acciones.Count; j++)
 			acciones[j].id = j;
+		 objetivos = new List<O>();
+		 for (int q = 0; q < objs.Length; q++) {
+			objetivos.Insert(objs[q].GetID(), objs[q]);
+		 }
+
 		 numero_actores = na;
 		 transicion = trn;
 		 recompensa = rep;
