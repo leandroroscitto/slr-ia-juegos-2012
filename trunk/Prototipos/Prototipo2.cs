@@ -61,7 +61,7 @@ namespace PruebasMarkov2 {
 			return "Tipo: " + tipo + ", movilidad: " + movilidad;
 		 }
 	  }
-	  public class Objetivo : Zona {
+	  public class Objetivo : Zona, Objetivo_MDP {
 		 public int id;
 		 public bool cumplido;
 		 public Vector2 posicion;
@@ -76,6 +76,11 @@ namespace PruebasMarkov2 {
 			complementario = c;
 			if (complementario != null)
 			   complementario.complementario = this;
+		 }
+
+
+		 public int GetID() {
+			return id;
 		 }
 
 		 public override string ToString() {
