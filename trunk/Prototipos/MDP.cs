@@ -9,7 +9,8 @@ namespace PruebasMarkov2 {
 
 	  public abstract Estado_MDP[] proximosEstados();
 	  public abstract Accion_MDP[] accionesValidas();
-	  public abstract Estado_MDP transicionAccion(Accion_MDP a);
+	  public abstract Estado_MDP hijoAccion(Accion_MDP a);
+	  public abstract Estado_MDP padreAccion(Accion_MDP a);
    }
    public abstract class Accion_MDP {
 	  public int id;
