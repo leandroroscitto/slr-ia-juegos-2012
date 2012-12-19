@@ -35,10 +35,18 @@ namespace PruebasMarkov2 {
 			return estados_padres.Count - 1;
 		 }
 
-		 public override Estado_MDP transicionAccion(Accion_MDP a) {
+		 public override Estado_MDP hijoAccion(Accion_MDP a) {
 			int index = acciones_hijos.IndexOf((Accion)a);
 			if (index >= 0)
 			   return estados_hijos[index];
+			else
+			   return null;
+		 }
+
+		 public override Estado_MDP padreAccion(Accion_MDP a) {
+			int index = acciones_padres.IndexOf((Accion)a);
+			if (index >= 0)
+			   return estados_padres[index];
 			else
 			   return null;
 		 }

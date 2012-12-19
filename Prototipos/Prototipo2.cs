@@ -282,6 +282,52 @@ namespace PruebasMarkov2 {
 
 	  // Acciones.
 
+	  public Objetivo InferirObjetivo(Jugador jugador, int turnos, float factor_d, out float[] valor_objetivo) {
+		 valor_objetivo = new float[objetivos.Length];
+		 float descuento = 1.0f;
+		 float suma = 0;
+		 Arbol_Estados.Nodo_Estado nodo = nodo_estado_actual;
+		 int tope_inferior = jugador.acciones.Count - Math.Min(turnos, jugador.acciones.Count);
+		 for (int turno = jugador.acciones.Count - 1; turno >= tope_inferior; turno--) {
+			foreach (Objetivo objetivo in objetivos) {
+			   Accion accion = resolucion.mdp.Politica[jugador.id][objetivo.id][nodo.estado_actual.id];
+			   if (accion.id == jugador.acciones[turno].id) {
+				  valor_objetivo[objetivo.id] += 1000 * descuento;
+				  suma += 1000 * descuento;
+			   }
+			}
+			nodo = (Arbol_Estados.Nodo_Estado)nodo.padreAccion(jugador.acciones[turno]);
+			descuento = descuento * factor_d;
+		 }
+
+		 if (suma > 0) {
+			for (int i = 0; i < valor_objetivo.Length; i++) {
+			   valor_objetivo[i] = valor_objetivo[i] / suma;
+			}
+
+			float max_valor = float.MinValue;
+			int objetivo_id = -1;
+			for (int i = 0; i < valor_objetivo.Length; i++) {
+			   Console.WriteLine("Objetivo: " + objetivos[i].representacion + ", valor: " + valor_objetivo[i] + ".");
+			   if (valor_objetivo[i] > max_valor) {
+				  max_valor = valor_objetivo[i];
+				  objetivo_id = i;
+			   }
+			}
+			Console.WriteLine();
+
+			if (objetivo_id != -1) {
+			   return objetivos[objetivo_id];
+			}
+			else {
+			   return null;
+			}
+		 }
+		 else {
+			return null;
+		 }
+	  }
+
 	  public void VerificarCumplimientoObjetivos() {
 		 bool[] objetivos_pisados = new bool[objetivos.Length];
 		 foreach (Jugador jugador in jugadores) {
@@ -309,7 +355,7 @@ namespace PruebasMarkov2 {
 			accion_realizada = null;
 			switch (jugador.control) {
 			   case Jugador.TControl.DIRECTO:
-				  if (turno % 2 == 0) {
+				  if (turno % jugadores.Length == 0) {
 					 foreach (Accion accion in acciones_posibles) {
 						if ((char)accion.direccion == key.Character && accion.jugador.id == jugador.id) {
 						   accion_realizada = accion;
@@ -322,13 +368,9 @@ namespace PruebasMarkov2 {
 				  break;
 			   case Jugador.TControl.IA:
 				  // TODO.
-				  if (turno % 2 == 1) {
-					 foreach (Accion accion in acciones_posibles) {
-						if ((char)accion.direccion == key.Character && accion.jugador.id == jugador.id) {
-						   accion_realizada = accion;
-						}
-					 }
-					 acciones_realizadas[i] = accion_realizada;
+				  Random R = new Random();
+				  if (turno % jugadores.Length == 1) {
+					 acciones_realizadas[i] = resolucion.mdp.Politica[jugador.id][R.Next(0, objetivos.Length)][nodo_estado_actual.estado_actual.id];
 				  }
 				  else
 					 acciones_realizadas[i] = null;
@@ -398,9 +440,9 @@ namespace PruebasMarkov2 {
 					 if (IntentarMovimiento(jugadores[i], accion.direccion)) {
 						jugadores[i].RegistrarAccion(accion);
 
-						Debug.Assert(nodo_estado_actual.transicionAccion(accion) != null);
+						Debug.Assert(nodo_estado_actual.hijoAccion(accion) != null);
 
-						nodo_estado_actual = (Arbol_Estados.Nodo_Estado)nodo_estado_actual.transicionAccion(accion);
+						nodo_estado_actual = (Arbol_Estados.Nodo_Estado)nodo_estado_actual.hijoAccion(accion);
 						exito = true;
 					 }
 					 break;
@@ -428,10 +470,12 @@ namespace PruebasMarkov2 {
 
 	  public string GetInformacion() {
 		 string informacion;
+
 		 informacion = "Posicion de jugadores:\n";
 		 foreach (Jugador jugador in jugadores) {
 			informacion += "  " + jugador.nombre + ": " + jugador.posicion.ToString() + "\n";
 		 }
+
 		 informacion += "Acciones posibles:\n";
 		 foreach (Jugador jugador in jugadores) {
 			informacion += "  " + jugador.nombre + "\n";
@@ -452,6 +496,17 @@ namespace PruebasMarkov2 {
 			}
 			informacion += "\n";
 		 }
+
+		 informacion += "Inferencia de objetivos:\n";
+		 float[] valores;
+		 foreach (Jugador jugador in jugadores) {
+			InferirObjetivo(jugador, 10, 0.75f, out valores);
+			informacion += "  " + jugador.nombre + ":\n";
+			foreach (Objetivo objetivo in objetivos) {
+			   informacion += "    " +objetivo.representacion + " (" + Math.Round(valores[objetivo.id], 2) + ")\n";
+			}
+		 }
+
 		 return informacion;
 	  }
 
@@ -460,7 +515,7 @@ namespace PruebasMarkov2 {
 		 TCODConsole.root.printFrame(offsety - 1, offsetx - 1, ancho + 2, alto + 2, false, TCODBackgroundFlag.Alpha, "Escenario");
 
 		 TCODConsole.root.printFrame(offsetx + ancho + 1, offsety - 1, ancho_ventana - (offsetx + ancho + 2), alto + 2, false, TCODBackgroundFlag.Alpha, "Informacion");
-		 TCODConsole.root.printRect(offsetx + ancho + 2, offsety, ancho_ventana - (offsetx + ancho + 1), alto, GetInformacion());
+		 TCODConsole.root.printRect(offsetx + ancho + 2, offsety, ancho_ventana - (offsetx + ancho + 3), alto +1 , GetInformacion());
 
 		 TCODConsole.root.printFrame(offsetx - 1, offsety + alto + 1, ancho_ventana - 2, alto_ventana - (offsety + alto + 2), false, TCODBackgroundFlag.Alpha, "Acciones");
 		 TCODConsole.root.printRect(offsetx, offsety + alto + 2, ancho_ventana - 3, alto_ventana - (offsety + alto + 3), GetAccionesLog());
@@ -560,10 +615,10 @@ namespace PruebasMarkov2 {
 		 Accion.direccion_complementaria.Add(TDireccion.DR, TDireccion.UL);
 		 Accion.direccion_complementaria.Add(TDireccion.DL, TDireccion.UR);
 
-		 int ancho = 20;
-		 int alto = 14;
+		 int ancho = 30;
+		 int alto = 25;
 
-		 Juego juego = new Juego(ancho, alto, 2, 4);
+		 Juego juego = new Juego(ancho, alto, 1, 4);
 	  }
    }
 }
