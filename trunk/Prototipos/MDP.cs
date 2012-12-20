@@ -8,13 +8,13 @@ namespace PruebasMarkov2 {
 	  public int id;
 
 	  public abstract Estado_MDP[] proximosEstados();
-	  public abstract Accion_MDP[] accionesValidas();
+	  public abstract Accion_MDP[] accionesValidas(int actor_id);
 	  public abstract Estado_MDP hijoAccion(Accion_MDP a);
 	  public abstract Estado_MDP padreAccion(Accion_MDP a);
    }
    public abstract class Accion_MDP {
 	  public int id;
-	  public int actor;
+	  public int actor_id;
    }
    public interface Objetivo_MDP {
 	  int GetID();
@@ -23,7 +23,7 @@ namespace PruebasMarkov2 {
 	  public abstract float valor(A a, S s, S sp);
    }
    public abstract class Recompensa_MDP<S, O> {
-	  public abstract float valor(S s, O o);
+	  public abstract float valor(S s, O o, int actor_id);
    }
 
    public class MDP<S, A, O, T, R>
@@ -82,18 +82,12 @@ namespace PruebasMarkov2 {
 
 		 Random R = new Random();
 		 foreach (S i in estados) {
-			A[] acciones_validas = (A[])i.accionesValidas();
-
 			for (int actor = 0; actor < numero_actores; actor++) {
+			   A[] acciones_validas = (A[])i.accionesValidas(actor);
 			   for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
-				  int accion_index = 0;
-				  A accion = null;
-				  do {
-					 accion = acciones_validas[accion_index];
-					 accion_index++;
-				  } while (accion.actor != actor);
+				  A accion = acciones_validas[R.Next(0, acciones_validas.Length)];
 				  Politica_Aux[actor][objetivo_id][i.id] = accion;
-				  Utilidad_Aux[actor][objetivo_id][i.id] = recompensa.valor(i, objetivos[objetivo_id]);
+				  Utilidad_Aux[actor][objetivo_id][i.id] = recompensa.valor(i, objetivos[objetivo_id], actor);
 			   }
 			}
 		 }
@@ -102,10 +96,10 @@ namespace PruebasMarkov2 {
 		 bool sincambios;
 		 do {
 			// Value_Determination
-			for (int actor = 0; actor < numero_actores; actor++) {
-			   for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
-				  foreach (S i in estados) {
-					 Utilidad_Aux[actor][objetivo_id][i.id] = recompensa.valor(i, objetivos[objetivo_id]) + Value_Policy[actor][objetivo_id][i.id];
+			foreach (S i in estados) {
+			   for (int actor = 0; actor < numero_actores; actor++) {
+				  for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
+					 Utilidad_Aux[actor][objetivo_id][i.id] = recompensa.valor(i, objetivos[objetivo_id], actor) + Value_Policy[actor][objetivo_id][i.id];
 				  }
 			   }
 			}
@@ -124,14 +118,14 @@ namespace PruebasMarkov2 {
 			   }
 
 			   for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
-				  foreach (A a in i.accionesValidas()) {
+				  foreach (A a in i.accionesValidas(-1)) {
 					 float value = 0;
 					 foreach (S j in i.proximosEstados()) {
-						value += transicion.valor(a, i, j) * Utilidad_Aux[a.actor][objetivo_id][j.id];
+						value += transicion.valor(a, i, j) * Utilidad_Aux[a.actor_id][objetivo_id][j.id];
 					 }
-					 if (value > value_max[a.actor][objetivo_id]) {
-						value_max[a.actor][objetivo_id] = value;
-						action_max[a.actor][objetivo_id] = a;
+					 if (value > value_max[a.actor_id][objetivo_id]) {
+						value_max[a.actor_id][objetivo_id] = value;
+						action_max[a.actor_id][objetivo_id] = a;
 					 }
 				  }
 			   }
@@ -146,8 +140,8 @@ namespace PruebasMarkov2 {
 
 					 if (value_max[actor][objetivo_id] > value_policy[actor][objetivo_id]) {
 						Politica_Aux[actor][objetivo_id][i.id] = action_max[actor][objetivo_id];
-						sincambios = false;
 						Value_Policy[actor][objetivo_id][i.id] = value_max[actor][objetivo_id];
+						sincambios = false;
 					 }
 					 else {
 						Value_Policy[actor][objetivo_id][i.id] = value_policy[actor][objetivo_id];
@@ -182,7 +176,7 @@ namespace PruebasMarkov2 {
 		 for (int actor = 0; actor < numero_actores; actor++) {
 			for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
 			   foreach (S i in estados) {
-				  Utilidad_Aux[actor][objetivo_id][i.id] = recompensa.valor(i, objetivos[objetivo_id]);
+				  Utilidad_Aux[actor][objetivo_id][i.id] = recompensa.valor(i, objetivos[objetivo_id],actor);
 			   }
 			}
 		 }
@@ -201,21 +195,21 @@ namespace PruebasMarkov2 {
 			   }
 
 			   for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
-				  foreach (A a in i.accionesValidas()) {
+				  foreach (A a in i.accionesValidas(-1)) {
 					 float value = 0;
 					 foreach (S j in i.proximosEstados()) {
-						value += transicion.valor(a, i, j) * Utilidad_Aux[a.actor][objetivo_id][j.id];
+						value += transicion.valor(a, i, j) * Utilidad_Aux[a.actor_id][objetivo_id][j.id];
 					 }
-					 if (value > value_max[a.actor][objetivo_id]) {
-						value_max[a.actor][objetivo_id] = value;
-						Politica_Aux[a.actor][objetivo_id][i.id] = a;
+					 if (value > value_max[a.actor_id][objetivo_id]) {
+						value_max[a.actor_id][objetivo_id] = value;
+						Politica_Aux[a.actor_id][objetivo_id][i.id] = a;
 					 }
 					 count++;
-					 Console.WriteLine("Completado: " + (count * 1f / (estados.Count * acciones.Count)));
+					 Console.WriteLine("Completado: " + 100 * (count * 1f / (estados.Count * acciones.Count * numero_actores)));
 				  }
 
 				  for (int actor = 0; actor < numero_actores; actor++) {
-					 Utilidad_Aux[actor][objetivo_id][i.id] = recompensa.valor(i, objetivos[objetivo_id]) + value_max[actor][objetivo_id];
+					 Utilidad_Aux[actor][objetivo_id][i.id] = recompensa.valor(i, objetivos[objetivo_id], actor) + value_max[actor][objetivo_id];
 				  }
 			   }
 			}
