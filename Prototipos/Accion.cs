@@ -19,7 +19,7 @@ namespace PruebasMarkov2 {
 
 	  public Accion(int i, Juego.Jugador j, TAccion t, TDireccion d) {
 		 jugador = j;
-		 actor = j.id;
+		 actor_id = j.id;
 		 id = i;
 		 tipo = t;
 		 direccion = d;

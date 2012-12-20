@@ -29,7 +29,7 @@ namespace PruebasMarkov2 {
 			objetivos = objs;
 		 }
 
-		 public override float valor(Arbol_Estados.Nodo_Estado s, Juego.Objetivo o) {
+		 public override float valor(Arbol_Estados.Nodo_Estado s, Juego.Objetivo o,int actor_id) {
 			float resultado = (s.estado_actual.objetivos_cumplidos.Count - s.estado_actual.objetivos_no_cumplidos.Count);
 			if (s.estado_actual.objetivos_no_cumplidos.Contains(o.id)) {
 			   float distancia = float.MaxValue;

@@ -308,13 +308,13 @@ namespace PruebasMarkov2 {
 			float max_valor = float.MinValue;
 			int objetivo_id = -1;
 			for (int i = 0; i < valor_objetivo.Length; i++) {
-			   Console.WriteLine("Objetivo: " + objetivos[i].representacion + ", valor: " + valor_objetivo[i] + ".");
+			   //Console.WriteLine("Objetivo: " + objetivos[i].representacion + ", valor: " + valor_objetivo[i] + ".");
 			   if (valor_objetivo[i] > max_valor) {
 				  max_valor = valor_objetivo[i];
 				  objetivo_id = i;
 			   }
 			}
-			Console.WriteLine();
+			//Console.WriteLine();
 
 			if (objetivo_id != -1) {
 			   return objetivos[objetivo_id];
@@ -503,8 +503,9 @@ namespace PruebasMarkov2 {
 			InferirObjetivo(jugador, 10, 0.75f, out valores);
 			informacion += "  " + jugador.nombre + ":\n";
 			foreach (Objetivo objetivo in objetivos) {
-			   informacion += "    " +objetivo.representacion + " (" + Math.Round(valores[objetivo.id], 2) + ")\n";
+			   informacion += objetivo.representacion + " (" + Math.Round(valores[objetivo.id], 2) + ") ";
 			}
+			informacion += "\n";
 		 }
 
 		 return informacion;
@@ -515,7 +516,7 @@ namespace PruebasMarkov2 {
 		 TCODConsole.root.printFrame(offsety - 1, offsetx - 1, ancho + 2, alto + 2, false, TCODBackgroundFlag.Alpha, "Escenario");
 
 		 TCODConsole.root.printFrame(offsetx + ancho + 1, offsety - 1, ancho_ventana - (offsetx + ancho + 2), alto + 2, false, TCODBackgroundFlag.Alpha, "Informacion");
-		 TCODConsole.root.printRect(offsetx + ancho + 2, offsety, ancho_ventana - (offsetx + ancho + 3), alto +1 , GetInformacion());
+		 TCODConsole.root.printRect(offsetx + ancho + 2, offsety, ancho_ventana - (offsetx + ancho + 3), alto + 1, GetInformacion());
 
 		 TCODConsole.root.printFrame(offsetx - 1, offsety + alto + 1, ancho_ventana - 2, alto_ventana - (offsety + alto + 2), false, TCODBackgroundFlag.Alpha, "Acciones");
 		 TCODConsole.root.printRect(offsetx, offsety + alto + 2, ancho_ventana - 3, alto_ventana - (offsety + alto + 3), GetAccionesLog());
@@ -615,8 +616,8 @@ namespace PruebasMarkov2 {
 		 Accion.direccion_complementaria.Add(TDireccion.DR, TDireccion.UL);
 		 Accion.direccion_complementaria.Add(TDireccion.DL, TDireccion.UR);
 
-		 int ancho = 30;
-		 int alto = 25;
+		 int ancho = 45;
+		 int alto = 30;
 
 		 Juego juego = new Juego(ancho, alto, 1, 4);
 	  }
