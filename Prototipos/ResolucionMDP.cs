@@ -7,10 +7,11 @@ namespace PruebasMarkov2 {
    public class ResolucionMDP {
 	  public class TransicionJuego : Transicion_MDP<Arbol_Estados.Nodo_Estado, Accion> {
 		 public override float valor(Accion a, Arbol_Estados.Nodo_Estado s, Arbol_Estados.Nodo_Estado sp) {
-			if (sp.estados_padres != null) {
-			   int indice = sp.estados_padres.IndexOf(s);
-			   if ((indice >= 0) && (sp.acciones_padres[indice] == a))
-				  return 1f;
+			if (s.estados_hijos != null) {
+			   int indice = s.estados_hijos.IndexOf(sp);
+			   if ((indice >= 0) && (s.acciones_hijos[indice] == a)) {
+				  return (1f / s.acciones_hijos.Count);
+			   }
 			   else
 				  return 0;
 			}
@@ -29,7 +30,7 @@ namespace PruebasMarkov2 {
 			objetivos = objs;
 		 }
 
-		 public override float valor(Arbol_Estados.Nodo_Estado s, Juego.Objetivo o,int actor_id) {
+		 public override float valor(Arbol_Estados.Nodo_Estado s, Juego.Objetivo o, int actor_id) {
 			float resultado = (s.estado_actual.objetivos_cumplidos.Count - s.estado_actual.objetivos_no_cumplidos.Count);
 			if (s.estado_actual.objetivos_no_cumplidos.Contains(o.id)) {
 			   float distancia = float.MaxValue;

@@ -98,7 +98,8 @@ namespace PruebasMarkov2 {
 		 public char representacion;
 		 public Vector2 posicion;
 		 public TControl control;
-		 public List<Accion> acciones;
+		 // <turno, accion>
+		 public Dictionary<int, Accion> acciones;
 
 		 public Jugador(int i, string n, char r, Vector2 p, TControl c) {
 			id = i;
@@ -106,11 +107,11 @@ namespace PruebasMarkov2 {
 			representacion = r;
 			posicion = p;
 			control = c;
-			acciones = new List<Accion>();
+			acciones = new Dictionary<int, Accion>();
 		 }
 
-		 public Accion RegistrarAccion(Accion accion) {
-			acciones.Add(accion);
+		 public Accion RegistrarAccion(int turno, Accion accion) {
+			acciones.Add(turno, accion);
 			return accion;
 		 }
 
@@ -139,6 +140,8 @@ namespace PruebasMarkov2 {
 	  public Arbol_Estados arbol_estados;
 	  public ResolucionMDP resolucion;
 	  public Arbol_Estados.Nodo_Estado nodo_estado_actual;
+	  public List<Arbol_Estados.Nodo_Estado> historial_estados;
+	  public int turno;
 
 	  public Juego(int an, int al, int nj, int no) {
 		 ancho = an;
@@ -163,6 +166,9 @@ namespace PruebasMarkov2 {
 		 arbol_estados = new Arbol_Estados(ref escenario, ref jugadores, ref acciones_posibles, ref objetivos);
 		 resolucion = new ResolucionMDP(ref arbol_estados);
 		 nodo_estado_actual = arbol_estados.nodo_estado_inicial;
+		 historial_estados = new List<Arbol_Estados.Nodo_Estado>();
+		 historial_estados.Add(nodo_estado_actual);
+		 turno = -1;
 
 		 // Gameloop.
 		 while (!TCODConsole.isWindowClosed()) {
@@ -174,12 +180,6 @@ namespace PruebasMarkov2 {
 			}
 			if (tecla.KeyCode == TCODKeyCode.Escape)
 			   break;
-			if (tecla.Character == 'r') {
-			   nodo_estado_actual = arbol_estados.nodo_estado_inicial;
-			   foreach (Jugador jugador in jugadores) {
-				  jugador.posicion = nodo_estado_actual.estado_actual.posicion_jugadores[jugador.id];
-			   }
-			}
 
 			// Acciones a realizar.
 			Accion[] acciones = BuscarAcciones(tecla);
@@ -345,7 +345,6 @@ namespace PruebasMarkov2 {
 		 }
 	  }
 
-	  public int turno = -1;
 	  public Accion[] BuscarAcciones(TCODKey key) {
 		 Accion[] acciones_realizadas = new Accion[jugadores.Length];
 		 Accion accion_realizada;
@@ -438,11 +437,12 @@ namespace PruebasMarkov2 {
 			   switch (accion.tipo) {
 				  case TAccion.MOVIMIENTO:
 					 if (IntentarMovimiento(jugadores[i], accion.direccion)) {
-						jugadores[i].RegistrarAccion(accion);
+						jugadores[i].RegistrarAccion(turno, accion);
 
 						Debug.Assert(nodo_estado_actual.hijoAccion(accion) != null);
 
 						nodo_estado_actual = (Arbol_Estados.Nodo_Estado)nodo_estado_actual.hijoAccion(accion);
+						historial_estados.Add(nodo_estado_actual);
 						exito = true;
 					 }
 					 break;
@@ -616,8 +616,8 @@ namespace PruebasMarkov2 {
 		 Accion.direccion_complementaria.Add(TDireccion.DR, TDireccion.UL);
 		 Accion.direccion_complementaria.Add(TDireccion.DL, TDireccion.UR);
 
-		 int ancho = 45;
-		 int alto = 30;
+		 int ancho = 16;
+		 int alto = 16;
 
 		 Juego juego = new Juego(ancho, alto, 1, 4);
 	  }
