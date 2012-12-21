@@ -140,7 +140,8 @@ namespace PruebasMarkov2 {
 	  public Arbol_Estados arbol_estados;
 	  public ResolucionMDP resolucion;
 	  public Arbol_Estados.Nodo_Estado nodo_estado_actual;
-	  public List<Arbol_Estados.Nodo_Estado> historial_estados;
+	  // <turno, estado>
+	  public Dictionary<int, Arbol_Estados.Nodo_Estado> historial_estados;
 	  public int turno;
 
 	  public Juego(int an, int al, int nj, int no) {
@@ -166,9 +167,9 @@ namespace PruebasMarkov2 {
 		 arbol_estados = new Arbol_Estados(ref escenario, ref jugadores, ref acciones_posibles, ref objetivos);
 		 resolucion = new ResolucionMDP(ref arbol_estados);
 		 nodo_estado_actual = arbol_estados.nodo_estado_inicial;
-		 historial_estados = new List<Arbol_Estados.Nodo_Estado>();
-		 historial_estados.Add(nodo_estado_actual);
-		 turno = -1;
+		 historial_estados = new Dictionary<int, Arbol_Estados.Nodo_Estado>();
+		 turno = 0;
+		 historial_estados.Add(turno, nodo_estado_actual);
 
 		 // Gameloop.
 		 while (!TCODConsole.isWindowClosed()) {
@@ -286,17 +287,19 @@ namespace PruebasMarkov2 {
 		 valor_objetivo = new float[objetivos.Length];
 		 float descuento = 1.0f;
 		 float suma = 0;
-		 Arbol_Estados.Nodo_Estado nodo = nodo_estado_actual;
-		 int tope_inferior = jugador.acciones.Count - Math.Min(turnos, jugador.acciones.Count);
-		 for (int turno = jugador.acciones.Count - 1; turno >= tope_inferior; turno--) {
-			foreach (Objetivo objetivo in objetivos) {
-			   Accion accion = resolucion.mdp.Politica[jugador.id][objetivo.id][nodo.estado_actual.id];
-			   if (accion.id == jugador.acciones[turno].id) {
-				  valor_objetivo[objetivo.id] += 1000 * descuento;
-				  suma += 1000 * descuento;
+		 Arbol_Estados.Nodo_Estado nodo;
+		 int tope_inferior = turno - Math.Min(turnos, turno);
+		 for (int t = turno; t >= tope_inferior; t--) {
+			if (historial_estados.TryGetValue(t, out nodo)) {
+			   foreach (Objetivo objetivo in objetivos) {
+				  Accion accion = resolucion.mdp.Politica[jugador.id][objetivo.id][nodo.estado_actual.id];
+				  Accion accion_jugador;
+				  if (jugador.acciones.TryGetValue(t, out accion_jugador) && accion.id == accion_jugador.id) {
+					 valor_objetivo[objetivo.id] += 1000 * descuento;
+					 suma += 1000 * descuento;
+				  }
 			   }
 			}
-			nodo = (Arbol_Estados.Nodo_Estado)nodo.padreAccion(jugador.acciones[turno]);
 			descuento = descuento * factor_d;
 		 }
 
@@ -442,7 +445,7 @@ namespace PruebasMarkov2 {
 						Debug.Assert(nodo_estado_actual.hijoAccion(accion) != null);
 
 						nodo_estado_actual = (Arbol_Estados.Nodo_Estado)nodo_estado_actual.hijoAccion(accion);
-						historial_estados.Add(nodo_estado_actual);
+						historial_estados.Add(turno, nodo_estado_actual);
 						exito = true;
 					 }
 					 break;
@@ -619,7 +622,7 @@ namespace PruebasMarkov2 {
 		 int ancho = 16;
 		 int alto = 16;
 
-		 Juego juego = new Juego(ancho, alto, 1, 4);
+		 Juego juego = new Juego(ancho, alto, 2, 4);
 	  }
    }
 }
