@@ -10,14 +10,15 @@ namespace PruebasMarkov2 {
 			if (s.estados_hijos != null) {
 			   int indice = s.estados_hijos.IndexOf(sp);
 			   if ((indice >= 0) && (s.acciones_hijos[indice] == a)) {
-				  return (1f / s.acciones_hijos.Count);
+				  //return (1f / s.acciones_hijos.Count);
+				  return 1f;
 			   }
 			   else
-				  return 0;
+				  return 0f;
 			}
 			else {
 			   // Nunca deberia llegar por aca.
-			   return -1;
+			   return -1f;
 			}
 		 }
 	  }
@@ -33,11 +34,19 @@ namespace PruebasMarkov2 {
 		 public override float valor(Arbol_Estados.Nodo_Estado s, Juego.Objetivo o, int actor_id) {
 			float resultado = (s.estado_actual.objetivos_cumplidos.Count - s.estado_actual.objetivos_no_cumplidos.Count);
 			if (s.estado_actual.objetivos_no_cumplidos.Contains(o.id)) {
-			   float distancia = float.MaxValue;
-			   foreach (Vector2 posicion_jugador in s.estado_actual.posicion_jugadores.Values) {
-				  distancia = Math.Min(distancia, posicion_jugador.distancia_directa(o.posicion));
+			   float distancia_minima = float.MaxValue;
+			   for (int actor = 0; actor < s.estado_actual.posicion_jugadores.Count; actor++) {
+				  if (actor == actor_id) {
+					 resultado -= s.estado_actual.posicion_jugadores[actor].distancia(o.posicion);
+				  }
+				  else {
+					 distancia_minima = Math.Min(distancia_minima, s.estado_actual.posicion_jugadores[actor].distancia(o.complementario.posicion));
+				  }
 			   }
-			   resultado -= distancia;
+			   resultado -= distancia_minima;
+			}
+			else {
+			   //System.Diagnostics.Debug.Assert(false);
 			}
 
 			return resultado;
@@ -54,7 +63,7 @@ namespace PruebasMarkov2 {
 
 		 Arbol_Estados.Nodo_Estado[] estados = arbol_estados.estados.ToArray();
 		 Accion[] acciones = arbol_estados.acciones_individuales.ToArray();
-		 mdp = new MDP<Arbol_Estados.Nodo_Estado, Accion, Juego.Objetivo, TransicionJuego, RecompensaJuego>(estados, acciones, arbol_estados.objetivos, arbol_estados.jugadores.Length, transicion, recompensa, 0.65f);
+		 mdp = new MDP<Arbol_Estados.Nodo_Estado, Accion, Juego.Objetivo, TransicionJuego, RecompensaJuego>(estados, acciones, arbol_estados.objetivos, arbol_estados.jugadores.Length, transicion, recompensa, 0.85f);
 	  }
    }
 }
