@@ -99,7 +99,7 @@ namespace PruebasMarkov2 {
 			foreach (S i in estados) {
 			   for (int actor = 0; actor < numero_actores; actor++) {
 				  for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
-					 Utilidad_Aux[actor][objetivo_id][i.id] = recompensa.valor(i, objetivos[objetivo_id], actor) + Value_Policy[actor][objetivo_id][i.id];
+					 Utilidad_Aux[actor][objetivo_id][i.id] = recompensa.valor(i, objetivos[objetivo_id], actor) + factor_descuento * Value_Policy[actor][objetivo_id][i.id];
 				  }
 			   }
 			}
@@ -149,7 +149,9 @@ namespace PruebasMarkov2 {
 				  }
 			   }
 
-			   Console.WriteLine("Progreso: " + (i.id * 100f / estados.Count));
+			   float porcentaje = (i.id * 100f / estados.Count);
+			   if (porcentaje % 10 == 0)
+				  Console.WriteLine("Progreso: " + (int)porcentaje);
 			}
 		 } while (!sincambios);
 
@@ -182,7 +184,13 @@ namespace PruebasMarkov2 {
 		 }
 
 		 do {
-			Array.Copy(Utilidad_Aux, Utilidad, Utilidad_Aux.Length);
+			for (int actor = 0; actor < Utilidad_Aux.Length; actor++) {
+			   for (int objetivo = 0; objetivo < Utilidad_Aux[actor].Length; objetivo++) {
+				  for (int estado = 0; estado < Utilidad_Aux[actor][objetivo].Length; estado++) {
+					 Utilidad[actor][objetivo][estado] = Utilidad_Aux[actor][objetivo][estado];
+				  }
+			   }
+			}
 
 			int count = 0;
 			foreach (S i in estados) {
@@ -205,7 +213,9 @@ namespace PruebasMarkov2 {
 						Politica_Aux[a.actor_id][objetivo_id][i.id] = a;
 					 }
 					 count++;
-					 Console.WriteLine("Completado: " + 100 * (count * 1f / (estados.Count * acciones.Count * numero_actores)));
+					 float porcentaje = (100 * (count * 1f / (estados.Count * acciones.Count * numero_actores)));
+					 if (porcentaje % 10 == 0)
+						Console.WriteLine("Completado: " + porcentaje);
 				  }
 
 				  for (int actor = 0; actor < numero_actores; actor++) {

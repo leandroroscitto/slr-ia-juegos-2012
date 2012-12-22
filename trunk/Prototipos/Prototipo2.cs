@@ -7,6 +7,7 @@ namespace PruebasMarkov2 {
    public struct Vector2 {
 	  public int x;
 	  public int y;
+	  public static TCODPath mapa_dist;
 
 	  public static Vector2 cero = new Vector2(0, 0);
 
@@ -21,6 +22,13 @@ namespace PruebasMarkov2 {
 
 	  public int distancia_directa(int px, int py) {
 		 return (int)Math.Sqrt(Math.Pow(x - px, 2) + Math.Pow(y - py, 2));
+	  }
+
+	  public int distancia(Vector2 posicion) {
+		 if (mapa_dist.compute(x, y, posicion.x, posicion.y))
+			return mapa_dist.size();
+		 else
+			return -1;
 	  }
 
 	  public override bool Equals(object obj) {
@@ -133,6 +141,7 @@ namespace PruebasMarkov2 {
 	  private int alto_ventana;
 
 	  public TCODMap mapa_fov;
+	  public TCODPath mapa_dist;
 
 	  public List<Accion> acciones_posibles;
 	  public List<string> log_acciones;
@@ -163,6 +172,7 @@ namespace PruebasMarkov2 {
 		 //PrepararJugadores(nj);
 		 PrepararAcciones();
 		 PrepararMapaFov();
+		 Vector2.mapa_dist = mapa_dist;
 
 		 arbol_estados = new Arbol_Estados(ref escenario, ref jugadores, ref acciones_posibles, ref objetivos);
 		 resolucion = new ResolucionMDP(ref arbol_estados);
@@ -279,6 +289,7 @@ namespace PruebasMarkov2 {
 			   mapa_fov.setProperties(j, i, pasable, pasable);
 			}
 		 }
+		 mapa_dist = new TCODPath(mapa_fov, 1.0f);
 	  }
 
 	  // Acciones.
@@ -372,7 +383,15 @@ namespace PruebasMarkov2 {
 				  // TODO.
 				  Random R = new Random();
 				  if (turno % jugadores.Length == 1) {
-					 acciones_realizadas[i] = resolucion.mdp.Politica[jugador.id][R.Next(0, objetivos.Length)][nodo_estado_actual.estado_actual.id];
+					 float[] vobj;
+					 Objetivo obj_p0 = InferirObjetivo(jugadores[0], 5, 0.25f, out vobj);
+					 if (obj_p0 == null) {
+						obj_p0 = objetivos[R.Next(0, objetivos.Length)];
+					 }
+					 else {
+						obj_p0 = obj_p0.complementario;
+					 }
+					 acciones_realizadas[i] = resolucion.mdp.Politica[jugador.id][obj_p0.complementario.id][nodo_estado_actual.estado_actual.id];
 				  }
 				  else
 					 acciones_realizadas[i] = null;
