@@ -270,7 +270,8 @@ namespace PruebasMarkov2 {
 	  public void PrepararEscenario(int nj) {
 		 bool continuar = false;
 		 while (!continuar) {
-			escenario = Generador_Escenario.generarEscenario(ancho, alto, objetivos);
+			//escenario = Generador_Escenario.generarEscenario(ancho, alto, objetivos);
+			escenario = Generador_Habitaciones.GenerarHabitaciones(ancho, alto, ref objetivos);
 			PrepararJugadores(nj);
 			TCODConsole.root.setBackgroundColor(TCODColor.darkestGrey);
 			TCODConsole.root.clear();
@@ -522,10 +523,19 @@ namespace PruebasMarkov2 {
 		 informacion += "Inferencia de objetivos:\n";
 		 float[] valores;
 		 foreach (Jugador jugador in jugadores) {
-			InferirObjetivo(jugador, 10, 0.75f, out valores);
+			InferirObjetivo(jugador, 20, 0.25f, out valores);
 			informacion += "  " + jugador.nombre + ":\n";
 			foreach (Objetivo objetivo in objetivos) {
 			   informacion += objetivo.representacion + " (" + Math.Round(valores[objetivo.id], 2) + ") ";
+			}
+			informacion += "\n";
+		 }
+
+		 informacion += "Utilidad de estado para cada jugador/estado:\n";
+		 foreach (Jugador jugador in jugadores) {
+			informacion += "  " + jugador.nombre + ":\n";
+			foreach (Objetivo objetivo in objetivos) {
+			   informacion += objetivo.representacion + ":" + Math.Round(resolucion.mdp.Utilidad[jugador.id][objetivo.id][nodo_estado_actual.estado_actual.id], 2) + " ";
 			}
 			informacion += "\n";
 		 }
@@ -534,14 +544,15 @@ namespace PruebasMarkov2 {
 	  }
 
 	  public void ImprimirGUI() {
+		 int alto_minimo = Math.Max(25, alto + 2);
 		 TCODConsole.root.printFrame(0, 0, ancho_ventana, alto_ventana, false, TCODBackgroundFlag.Alpha, "Pruebas Markov");
-		 TCODConsole.root.printFrame(offsety - 1, offsetx - 1, ancho + 2, alto + 2, false, TCODBackgroundFlag.Alpha, "Escenario");
+		 TCODConsole.root.printFrame(offsety - 1, offsetx - 1, ancho + 2, alto_minimo, false, TCODBackgroundFlag.Alpha, "Escenario");
 
-		 TCODConsole.root.printFrame(offsetx + ancho + 1, offsety - 1, ancho_ventana - (offsetx + ancho + 2), alto + 2, false, TCODBackgroundFlag.Alpha, "Informacion");
-		 TCODConsole.root.printRect(offsetx + ancho + 2, offsety, ancho_ventana - (offsetx + ancho + 3), alto + 1, GetInformacion());
+		 TCODConsole.root.printFrame(offsetx + ancho + 1, offsety - 1, ancho_ventana - (offsetx + ancho + 2), alto_minimo, false, TCODBackgroundFlag.Alpha, "Informacion");
+		 TCODConsole.root.printRect(offsetx + ancho + 2, offsety, ancho_ventana - (offsetx + ancho + 3), alto_minimo - 1, GetInformacion());
 
-		 TCODConsole.root.printFrame(offsetx - 1, offsety + alto + 1, ancho_ventana - 2, alto_ventana - (offsety + alto + 2), false, TCODBackgroundFlag.Alpha, "Acciones");
-		 TCODConsole.root.printRect(offsetx, offsety + alto + 2, ancho_ventana - 3, alto_ventana - (offsety + alto + 3), GetAccionesLog());
+		 TCODConsole.root.printFrame(offsetx - 1, offsety + alto_minimo - 1, ancho_ventana - 2, alto_ventana - (offsety + alto_minimo), false, TCODBackgroundFlag.Alpha, "Acciones");
+		 TCODConsole.root.printRect(offsetx, offsety + alto_minimo, ancho_ventana - 3, alto_ventana - (offsety + alto_minimo + 1), GetAccionesLog());
 	  }
 
 	  public void ImprimirFov(int offsetx, int offsety, int radio) {
@@ -638,8 +649,8 @@ namespace PruebasMarkov2 {
 		 Accion.direccion_complementaria.Add(TDireccion.DR, TDireccion.UL);
 		 Accion.direccion_complementaria.Add(TDireccion.DL, TDireccion.UR);
 
-		 int ancho = 16;
-		 int alto = 16;
+		 int ancho = 8;
+		 int alto = 8;
 
 		 Juego juego = new Juego(ancho, alto, 2, 4);
 	  }

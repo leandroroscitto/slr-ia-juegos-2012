@@ -56,7 +56,7 @@ namespace PruebasMarkov2 {
 				  break;
 			}
 			nueva_posicion = posicion_deseada;
-			if (escenario_base[posicion_deseada.y][posicion_deseada.x].movilidad == Juego.Zona.TMovilidad.PASABLE) {
+			if ((posicion_deseada.x < escenario_base[0].Length && posicion_deseada.y < escenario_base.Length) && (posicion_deseada.x >= 0 && posicion_deseada.y >= 0) && escenario_base[posicion_deseada.y][posicion_deseada.x].movilidad == Juego.Zona.TMovilidad.PASABLE) {
 			   foreach (int otro_jugador_id in posicion_jugadores.Keys) {
 				  if ((otro_jugador_id != jugador.id) && (posicion_jugadores[otro_jugador_id].Equals(posicion_deseada)))
 					 return false;

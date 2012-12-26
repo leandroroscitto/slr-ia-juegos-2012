@@ -77,6 +77,11 @@ namespace PruebasMarkov2 {
 			   Utilidad_Aux[actor][objetivo_id] = new float[estados.Count];
 			   Politica_Aux[actor][objetivo_id] = new A[estados.Count];
 			   Value_Policy[actor][objetivo_id] = new float[estados.Count];
+			   foreach (S i in estados) {
+				  Utilidad_Aux[actor][objetivo_id][i.id] = 0;
+				  Politica_Aux[actor][objetivo_id][i.id] = 0;
+				  Value_Policy[actor][objetivo_id][i.id] = 0;
+			   }
 			}
 		 }
 
@@ -91,7 +96,6 @@ namespace PruebasMarkov2 {
 			   }
 			}
 		 }
-
 
 		 bool sincambios;
 		 do {
@@ -121,6 +125,7 @@ namespace PruebasMarkov2 {
 				  foreach (A a in i.accionesValidas(-1)) {
 					 float value = 0;
 					 foreach (S j in i.proximosEstados()) {
+						// Esta calculando la utilidad para solo un jugador de la accion:
 						value += transicion.valor(a, i, j) * Utilidad_Aux[a.actor_id][objetivo_id][j.id];
 					 }
 					 if (value > value_max[a.actor_id][objetivo_id]) {
@@ -133,6 +138,12 @@ namespace PruebasMarkov2 {
 			   float[][] value_policy = new float[numero_actores][];
 			   for (int actor = 0; actor < numero_actores; actor++) {
 				  value_policy[actor] = new float[objetivos.Count];
+				  for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
+					 value_policy[actor][objetivo_id] = 0;
+				  }
+			   }
+
+			   for (int actor = 0; actor < numero_actores; actor++) {
 				  for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
 					 foreach (S j in i.proximosEstados()) {
 						value_policy[actor][objetivo_id] += transicion.valor(Politica_Aux[actor][objetivo_id][i.id], i, j) * Utilidad_Aux[actor][objetivo_id][j.id];
@@ -178,7 +189,7 @@ namespace PruebasMarkov2 {
 		 for (int actor = 0; actor < numero_actores; actor++) {
 			for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
 			   foreach (S i in estados) {
-				  Utilidad_Aux[actor][objetivo_id][i.id] = recompensa.valor(i, objetivos[objetivo_id],actor);
+				  Utilidad_Aux[actor][objetivo_id][i.id] = recompensa.valor(i, objetivos[objetivo_id], actor);
 			   }
 			}
 		 }
