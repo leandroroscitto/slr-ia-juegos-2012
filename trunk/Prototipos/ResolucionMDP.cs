@@ -40,12 +40,12 @@ namespace PruebasMarkov2 {
 					 resultado -= s.estado_actual.posicion_jugadores[actor].distancia(o.posicion);
 				  }
 				  else {
-					 distancia_minima = Math.Min(distancia_minima, s.estado_actual.posicion_jugadores[actor].distancia(o.complementario.posicion));
-					 //distancia_minima = 0;
+					 //distancia_minima = Math.Min(distancia_minima, s.estado_actual.posicion_jugadores[actor].distancia(o.complementario.posicion));
+					 distancia_minima = 0;
 				  }
 			   }
 			   if (s.estado_actual.posicion_jugadores.Count > 1)
-				  resultado -= distancia_minima/2;
+				  resultado -= distancia_minima;
 			}
 			else {
 			   //System.Diagnostics.Debug.Assert(false);
@@ -65,7 +65,7 @@ namespace PruebasMarkov2 {
 
 		 Arbol_Estados.Nodo_Estado[] estados = arbol_estados.estados.ToArray();
 		 Accion[] acciones = arbol_estados.acciones_individuales.ToArray();
-		 mdp = new MDP<Arbol_Estados.Nodo_Estado, Accion, Juego.Objetivo, TransicionJuego, RecompensaJuego>(estados, acciones, arbol_estados.objetivos, arbol_estados.jugadores.Length, transicion, recompensa, 0.65f);
+		 mdp = new MDP<Arbol_Estados.Nodo_Estado, Accion, Juego.Objetivo, TransicionJuego, RecompensaJuego>(estados, acciones, arbol_estados.objetivos, arbol_estados.jugadores.Length, transicion, recompensa, 0.85f);
 	  }
    }
 }

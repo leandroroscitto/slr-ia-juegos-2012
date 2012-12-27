@@ -439,7 +439,7 @@ namespace PruebasMarkov2 {
 			   posicion_deseada.x++;
 			   break;
 		 }
-		 if (escenario[posicion_deseada.y][posicion_deseada.x].movilidad == Zona.TMovilidad.PASABLE) {
+		 if ((posicion_deseada.x < escenario[0].Length && posicion_deseada.y < escenario.Length) && (posicion_deseada.x >= 0 && posicion_deseada.y >= 0) && escenario[posicion_deseada.y][posicion_deseada.x].movilidad == Zona.TMovilidad.PASABLE) {
 			foreach (Jugador otro_jugador in jugadores) {
 			   if ((otro_jugador != jugador) && (otro_jugador.posicion.Equals(posicion_deseada)))
 				  return false;
