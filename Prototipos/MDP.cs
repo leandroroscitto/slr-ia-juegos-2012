@@ -98,6 +98,7 @@ namespace PruebasMarkov2 {
 		 }
 
 		 bool sincambios;
+		 float diferencia_total;
 		 do {
 			// Value_Determination
 			foreach (S i in estados) {
@@ -108,6 +109,7 @@ namespace PruebasMarkov2 {
 			   }
 			}
 			sincambios = true;
+			diferencia_total = 0;
 
 			foreach (S i in estados) {
 			   A[][] action_max = new A[numero_actores][];
@@ -152,7 +154,9 @@ namespace PruebasMarkov2 {
 						value_policy[actor][objetivo_id] += transicion.valor(Politica_Aux[actor][objetivo_id][i.id], i, j) * Utilidad_Aux[actor][objetivo_id][j.id];
 					 }
 
-					 if (value_max[actor][objetivo_id] > value_policy[actor][objetivo_id]) {
+					 float diferencia = Math.Abs(value_max[actor][objetivo_id] - value_policy[actor][objetivo_id]);
+					 if (diferencia != 0) {
+						diferencia_total += diferencia;
 						Politica_Aux[actor][objetivo_id][i.id] = action_max[actor][objetivo_id];
 						Value_Policy[actor][objetivo_id][i.id] = value_max[actor][objetivo_id];
 						sincambios = false;
@@ -165,9 +169,9 @@ namespace PruebasMarkov2 {
 
 			   float porcentaje = (i.id * 100f / estados.Count);
 			   if (porcentaje % 10 == 0)
-				  Console.WriteLine("Progreso: " + (int)porcentaje);
+				  Console.WriteLine("Progreso: " + (int)porcentaje + ", diferencia: " + diferencia_total);
 			}
-		 } while (!sincambios);
+		 } while (!sincambios && diferencia_total > 0.02f);
 
 		 Utilidad = Utilidad_Aux;
 		 Politica = Politica_Aux;
