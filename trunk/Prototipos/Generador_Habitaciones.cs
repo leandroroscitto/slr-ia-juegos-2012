@@ -117,9 +117,6 @@ namespace PruebasMarkov2 {
 		 w2 = nodo2.w - 2;
 		 h2 = nodo2.h - 2;
 
-		 int x, y;
-		 x = y = 0;
-
 		 if (horizontal) {
 			if ((x1 + w1 - 1 < x2) || (x2 + w2 - 1 < x1)) {
 			   int xo = TCODRandom.getInstance().getInt(x1, x1 + w1 - 1);
