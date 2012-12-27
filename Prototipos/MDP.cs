@@ -171,7 +171,7 @@ namespace PruebasMarkov2 {
 			   if (porcentaje % 10 == 0)
 				  Console.WriteLine("Progreso: " + (int)porcentaje + ", diferencia: " + diferencia_total);
 			}
-		 } while (!sincambios && diferencia_total > 0.02f);
+		 } while (!sincambios && diferencia_total > 0.0002f);
 
 		 Utilidad = Utilidad_Aux;
 		 Politica = Politica_Aux;

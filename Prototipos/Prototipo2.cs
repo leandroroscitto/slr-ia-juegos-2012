@@ -181,6 +181,9 @@ namespace PruebasMarkov2 {
 		 turno = 0;
 		 historial_estados.Add(turno, nodo_estado_actual);
 
+		 jugador_AccionesGUI = 0;
+		 objetivo_AccionesGUI = 0;
+
 		 // Gameloop.
 		 while (!TCODConsole.isWindowClosed()) {
 			// Controles.
@@ -205,6 +208,7 @@ namespace PruebasMarkov2 {
 			ImprimirEscenario(offsetx, offsety);
 			ImprimirJugadores(offsety, offsetx);
 			ImprimirFov(offsetx, offsety, 8);
+			ImprimirAccionesGUI();
 
 			TCODConsole.flush();
 		 }
@@ -361,6 +365,16 @@ namespace PruebasMarkov2 {
 	  }
 
 	  public Accion[] BuscarAcciones(TCODKey key) {
+		 if (key.KeyCode == TCODKeyCode.KeypadDivide)
+			jugador_AccionesGUI = Math.Abs(jugador_AccionesGUI + 1) % jugadores.Length;
+		 if (key.KeyCode == TCODKeyCode.KeypadMultiply)
+			jugador_AccionesGUI = Math.Abs(jugador_AccionesGUI - 1) % jugadores.Length;
+
+		 if (key.KeyCode == TCODKeyCode.KeypadAdd)
+			objetivo_AccionesGUI = Math.Abs(objetivo_AccionesGUI + 1) % objetivos.Length;
+		 if (key.KeyCode == TCODKeyCode.KeypadSubtract)
+			objetivo_AccionesGUI = Math.Abs(objetivo_AccionesGUI - 1) % objetivos.Length;
+
 		 Accion[] acciones_realizadas = new Accion[jugadores.Length];
 		 Accion accion_realizada;
 		 turno++;
@@ -548,8 +562,15 @@ namespace PruebasMarkov2 {
 		 TCODConsole.root.printFrame(0, 0, ancho_ventana, alto_ventana, false, TCODBackgroundFlag.Alpha, "Pruebas Markov");
 		 TCODConsole.root.printFrame(offsety - 1, offsetx - 1, ancho + 2, alto_minimo, false, TCODBackgroundFlag.Alpha, "Escenario");
 
-		 TCODConsole.root.printFrame(offsetx + ancho + 1, offsety - 1, ancho_ventana - (offsetx + ancho + 2), alto_minimo, false, TCODBackgroundFlag.Alpha, "Informacion");
-		 TCODConsole.root.printRect(offsetx + ancho + 2, offsety, ancho_ventana - (offsetx + ancho + 3), alto_minimo - 1, GetInformacion());
+		 // ancho_ventana - (offsetx + ancho + 2)
+		 TCODConsole.root.printFrame(offsetx + ancho + 1, offsety - 1, 48, alto_minimo, false, TCODBackgroundFlag.Alpha, "Informacion");
+		 TCODConsole.root.printRect(offsetx + ancho + 2, offsety, 47, alto_minimo - 1, GetInformacion());
+
+		 string opciones = "";
+		 opciones += "Jug: " + jugadores[jugador_AccionesGUI].nombre + " / *" + "\n";
+		 opciones += "Obj: " + objetivos[objetivo_AccionesGUI].representacion + " - +" + "\n";
+		 TCODConsole.root.printFrame(offsetx + ancho + 49, offsety - 1, ancho_ventana - (offsetx + ancho + 2) - 48, alto_minimo, false, TCODBackgroundFlag.Alpha, "Opciones");
+		 TCODConsole.root.printRect(offsetx + ancho + 50, offsety, ancho_ventana - (offsetx + ancho + 2) - 49, alto_minimo - 1, opciones);
 
 		 TCODConsole.root.printFrame(offsetx - 1, offsety + alto_minimo - 1, ancho_ventana - 2, alto_ventana - (offsety + alto_minimo), false, TCODBackgroundFlag.Alpha, "Acciones");
 		 TCODConsole.root.printRect(offsetx, offsety + alto_minimo, ancho_ventana - 3, alto_ventana - (offsety + alto_minimo + 1), GetAccionesLog());
@@ -592,6 +613,94 @@ namespace PruebasMarkov2 {
 		 foreach (Jugador jugador in jugadores) {
 			TCODConsole.root.printEx(jugador.posicion.x + i, jugador.posicion.y + j, TCODBackgroundFlag.Burn, TCODAlignment.CenterAlignment, "" + jugador.representacion);
 			TCODConsole.root.setCharForeground(jugador.posicion.x + i, jugador.posicion.y + j, TCODColor.white);
+		 }
+	  }
+
+
+	  public int jugador_AccionesGUI;
+	  public int objetivo_AccionesGUI;
+	  public void ImprimirAccionesGUI() {
+		 for (int x = 0; x < alto; x++) {
+			for (int y = 0; y < ancho; y++) {
+			   bool en_jugador = false;
+			   if (escenario[x][y].movilidad == Zona.TMovilidad.PASABLE) {
+				  Vector2[] posicion_jugadores = new Vector2[jugadores.Length];
+				  foreach (Jugador jugador in jugadores) {
+					 if (jugador.id != jugador_AccionesGUI) {
+						if (jugador.posicion.x == y && jugador.posicion.y == x) {
+						   en_jugador = true;
+						}
+						posicion_jugadores[jugador.id] = jugador.posicion;
+					 }
+					 else {
+						posicion_jugadores[jugador_AccionesGUI] = new Vector2(y, x);
+					 }
+				  }
+				  if (en_jugador)
+					 continue;
+				  else {
+					 int objetivos_cumplidos = 0;
+					 foreach (Objetivo objetivo in objetivos) {
+						objetivos_cumplidos += objetivo.cumplido ? 1 : 0;
+					 }
+
+					 List<Arbol_Estados.Nodo_Estado> estados = resolucion.arbol_estados.estados_dict[objetivos_cumplidos][posicion_jugadores];
+					 Estado estado = null;
+
+					 foreach (Arbol_Estados.Nodo_Estado nodo_estado in estados) {
+						bool coincide = true;
+						foreach (Objetivo objetivo in objetivos) {
+						   if (objetivo.cumplido && !nodo_estado.estado_actual.objetivos_cumplidos.Contains(objetivo.id))
+							  coincide = false;
+						   if (!objetivo.cumplido && !nodo_estado.estado_actual.objetivos_no_cumplidos.Contains(objetivo.id))
+							  coincide = false;
+						}
+						if (coincide) {
+						   estado = nodo_estado.estado_actual;
+						   break;
+						}
+					 }
+
+					 Accion accion = resolucion.mdp.Politica[jugador_AccionesGUI][objetivo_AccionesGUI][estado.id];
+					 char direccion = ' ';
+					 switch (accion.direccion) {
+						case TDireccion.C:
+						   direccion = (char)TCODSpecialCharacter.Bullet;
+						   break;
+						case TDireccion.D:
+						   direccion = (char)171;
+						   break;
+						case TDireccion.DL:
+						   direccion = (char)166;
+						   break;
+						case TDireccion.DR:
+						   direccion = (char)169;
+						   break;
+						case TDireccion.L:
+						   direccion = (char)172;
+						   break;
+						case TDireccion.R:
+						   direccion = (char)173;
+						   break;
+						case TDireccion.U:
+						   direccion = (char)170;
+						   break;
+						case TDireccion.UL:
+						   direccion = (char)167;
+						   break;
+						case TDireccion.UR:
+						   direccion = (char)168;
+						   break;
+					 }
+
+					 if (objetivos[objetivo_AccionesGUI].posicion.x == y && objetivos[objetivo_AccionesGUI].posicion.y == x)
+						TCODConsole.root.setCharBackground(y + offsety, x + offsetx, TCODColor.yellow);
+					 else
+						TCODConsole.root.setCharBackground(y + offsety, x + offsetx, TCODColor.red);
+					 TCODConsole.root.putChar(y + offsety, x + offsetx, (int)direccion);
+				  }
+			   }
+			}
 		 }
 	  }
 
@@ -649,8 +758,8 @@ namespace PruebasMarkov2 {
 		 Accion.direccion_complementaria.Add(TDireccion.DR, TDireccion.UL);
 		 Accion.direccion_complementaria.Add(TDireccion.DL, TDireccion.UR);
 
-		 int ancho = 14;
-		 int alto = 14;
+		 int ancho = 8;
+		 int alto = 8;
 
 		 Juego juego = new Juego(ancho, alto, 2, 4);
 	  }
