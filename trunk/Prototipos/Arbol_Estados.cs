@@ -88,10 +88,10 @@ namespace PruebasMarkov2 {
 	  public Juego.Jugador[] jugadores;
 	  public List<Accion> acciones_individuales;
 	  // <numero_objetivos_cumplidos, <posicion_player_0, nodo_estado>>
-	  public Dictionary<int, Dictionary<Vector2, List<Nodo_Estado>>> estados_dict;
+	  public Dictionary<int, Dictionary<Vector2[], List<Nodo_Estado>>> estados_dict;
 	  public List<Nodo_Estado> estados;
 	  public Nodo_Estado nodo_estado_inicial;
-	  public Dictionary<int, Dictionary<Vector2, List<Nodo_Estado>>> frontera_dict;
+	  public Dictionary<int, Dictionary<Vector2[], List<Nodo_Estado>>> frontera_dict;
 	  private Queue<Nodo_Estado> frontera;
 
 	  private Nodo_Estado nodo_estado_actual;
@@ -107,9 +107,9 @@ namespace PruebasMarkov2 {
 	  }
 
 	  private void PrepararEstados() {
-		 estados_dict = new Dictionary<int, Dictionary<Vector2, List<Nodo_Estado>>>();
+		 estados_dict = new Dictionary<int, Dictionary<Vector2[], List<Nodo_Estado>>>();
 		 estados = new List<Nodo_Estado>();
-		 frontera_dict = new Dictionary<int, Dictionary<Vector2, List<Nodo_Estado>>>();
+		 frontera_dict = new Dictionary<int, Dictionary<Vector2[], List<Nodo_Estado>>>();
 		 frontera = new Queue<Nodo_Estado>();
 
 		 cant_estados = 0;
@@ -191,39 +191,67 @@ namespace PruebasMarkov2 {
 		 }
 	  }
 
-	  private void AgregarEstadoDict(Nodo_Estado estado, Dictionary<int, Dictionary<Vector2, List<Nodo_Estado>>> dict) {
-		 int cant_obj_cumplidos = estado.estado_actual.objetivos_cumplidos.Count;
-		 Vector2 posicion_jugador_0 = estado.estado_actual.posicion_jugadores[0];
+	  public class Comparador_Arreglo_Vector2 : IEqualityComparer<Vector2[]> {
 
-		 Dictionary<Vector2, List<Nodo_Estado>> PosJugador_Estados;
+		 public bool Equals(Vector2[] x, Vector2[] y) {
+			if (x.Length == y.Length) {
+			   for (int i = 0; i < x.Length; i++) {
+				  if (!x[i].Equals(y[i]))
+					 return false;
+			   }
+			   return true;
+			}
+			else
+			   return false;
+		 }
+
+		 public int GetHashCode(Vector2[] obj) {
+			int dimensiones = Juego.alto * Juego.ancho;
+			int valor = 0;
+			for (int i = 0; i < obj.Length; i++) {
+			   valor += obj[i].GetHashCode() * (int)Math.Pow(Math.Floor(Math.Log10(dimensiones)), i);
+			}
+			return valor;
+		 }
+	  }
+
+	  public static Comparador_Arreglo_Vector2 comparador = new Comparador_Arreglo_Vector2();
+
+	  private void AgregarEstadoDict(Nodo_Estado estado, Dictionary<int, Dictionary<Vector2[], List<Nodo_Estado>>> dict) {
+		 int cant_obj_cumplidos = estado.estado_actual.objetivos_cumplidos.Count;
+		 Vector2[] posicion_jugadores = new Vector2[estado.estado_actual.posicion_jugadores.Count];
+		 estado.estado_actual.posicion_jugadores.Values.CopyTo(posicion_jugadores, 0);
+
+		 Dictionary<Vector2[], List<Nodo_Estado>> PosJugador_Estados;
 		 if (dict.TryGetValue(cant_obj_cumplidos, out PosJugador_Estados)) {
 			List<Nodo_Estado> Lista_Estados;
-			if (PosJugador_Estados.TryGetValue(posicion_jugador_0, out Lista_Estados)) {
+			if (PosJugador_Estados.TryGetValue(posicion_jugadores, out Lista_Estados)) {
 			   Lista_Estados.Add(estado);
 			}
 			else {
 			   Lista_Estados = new List<Nodo_Estado>();
 			   Lista_Estados.Add(estado);
-			   PosJugador_Estados.Add(posicion_jugador_0, Lista_Estados);
+			   PosJugador_Estados.Add(posicion_jugadores, Lista_Estados);
 			}
 		 }
 		 else {
-			PosJugador_Estados = new Dictionary<Vector2, List<Nodo_Estado>>();
+			PosJugador_Estados = new Dictionary<Vector2[], List<Nodo_Estado>>(comparador);
 			List<Nodo_Estado> Lista_Estados = new List<Nodo_Estado>();
 			Lista_Estados.Add(estado);
-			PosJugador_Estados.Add(posicion_jugador_0, Lista_Estados);
+			PosJugador_Estados.Add(posicion_jugadores, Lista_Estados);
 			dict.Add(cant_obj_cumplidos, PosJugador_Estados);
 		 }
 	  }
 
-	  private bool GetEstadoDict(Nodo_Estado estado, Dictionary<int, Dictionary<Vector2, List<Nodo_Estado>>> dict, out Nodo_Estado nodo_estado_resultado) {
+	  private bool GetEstadoDict(Nodo_Estado estado, Dictionary<int, Dictionary<Vector2[], List<Nodo_Estado>>> dict, out Nodo_Estado nodo_estado_resultado) {
 		 int cant_obj_cumplidos = estado.estado_actual.objetivos_cumplidos.Count;
-		 Vector2 posicion_jugador_0 = estado.estado_actual.posicion_jugadores[0];
+		 Vector2[] posicion_jugadores = new Vector2[estado.estado_actual.posicion_jugadores.Count];
+		 estado.estado_actual.posicion_jugadores.Values.CopyTo(posicion_jugadores, 0);
 
-		 Dictionary<Vector2, List<Nodo_Estado>> PosJugador_Estados;
+		 Dictionary<Vector2[], List<Nodo_Estado>> PosJugador_Estados;
 		 if (dict.TryGetValue(cant_obj_cumplidos, out PosJugador_Estados)) {
 			List<Nodo_Estado> Lista_Estados;
-			if (PosJugador_Estados.TryGetValue(posicion_jugador_0, out Lista_Estados)) {
+			if (PosJugador_Estados.TryGetValue(posicion_jugadores, out Lista_Estados)) {
 			   foreach (Nodo_Estado nodo_estado in Lista_Estados) {
 				  if (nodo_estado.estado_actual.Equals(estado.estado_actual)) {
 					 nodo_estado_resultado = nodo_estado;
@@ -237,14 +265,15 @@ namespace PruebasMarkov2 {
 		 return false;
 	  }
 
-	  private void RemoverEstadoDict(Nodo_Estado estado, Dictionary<int, Dictionary<Vector2, List<Nodo_Estado>>> dict) {
+	  private void RemoverEstadoDict(Nodo_Estado estado, Dictionary<int, Dictionary<Vector2[], List<Nodo_Estado>>> dict) {
 		 int cant_obj_cumplidos = estado.estado_actual.objetivos_cumplidos.Count;
-		 Vector2 posicion_jugador_0 = estado.estado_actual.posicion_jugadores[0];
+		 Vector2[] posicion_jugadores = new Vector2[estado.estado_actual.posicion_jugadores.Count];
+		 estado.estado_actual.posicion_jugadores.Values.CopyTo(posicion_jugadores, 0);
 
-		 Dictionary<Vector2, List<Nodo_Estado>> PosJugador_Estados;
+		 Dictionary<Vector2[], List<Nodo_Estado>> PosJugador_Estados;
 		 if (dict.TryGetValue(cant_obj_cumplidos, out PosJugador_Estados)) {
 			List<Nodo_Estado> Lista_Estados;
-			if (PosJugador_Estados.TryGetValue(posicion_jugador_0, out Lista_Estados)) {
+			if (PosJugador_Estados.TryGetValue(posicion_jugadores, out Lista_Estados)) {
 			   Lista_Estados.Remove(estado);
 			}
 		 }

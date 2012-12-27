@@ -37,8 +37,8 @@ namespace PruebasMarkov2 {
 	  }
 
 	  public override int GetHashCode() {
-		 int multiplicador = (int)Math.Pow(10, Math.Floor(Math.Log10(Juego.alto)) + 1);
-		 return (x * multiplicador + y);
+		 //int multiplicador = (int)Math.Pow(10, Math.Floor(Math.Log10(Juego.alto)) + 1);
+		 return (x * Juego.alto + y * Juego.ancho);
 	  }
 
 	  public override string ToString() {
@@ -649,8 +649,8 @@ namespace PruebasMarkov2 {
 		 Accion.direccion_complementaria.Add(TDireccion.DR, TDireccion.UL);
 		 Accion.direccion_complementaria.Add(TDireccion.DL, TDireccion.UR);
 
-		 int ancho = 8;
-		 int alto = 8;
+		 int ancho = 14;
+		 int alto = 14;
 
 		 Juego juego = new Juego(ancho, alto, 2, 4);
 	  }
