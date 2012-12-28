@@ -20,8 +20,8 @@ namespace PruebasMarkov2 {
 		 public override bool visitNode(TCODBsp node) {
 			int offset = 2;
 			if (node.isLeaf() && TCODRandom.getInstance().getGaussianRangeFloat(0, 1) < prob_aceptar) {
-			   for (int i = node.y + offset; i < node.y + node.h - offset; i++) {
-				  for (int j = node.x + offset; j < node.x + node.w - offset; j++) {
+			   for (int i = node.x + offset; i < node.x + node.w - offset; i++) {
+				  for (int j = node.y + offset; j < node.y + node.h - offset; j++) {
 					 zonas[i][j].tipo = Zona.TZona.PISO;
 					 zonas[i][j].representacion = (char)Zona.TZona.PISO;
 					 zonas[i][j].movilidad = Zona.TMovilidad.PASABLE;
@@ -47,37 +47,37 @@ namespace PruebasMarkov2 {
 			   TCODLine.init(p1.x, p1.y, p2.x, p2.y);
 			   int i = 0;
 			   int j = 0;
-			   while (!TCODLine.step(ref i, ref j) && (j < zonas.Length) && (i < zonas[0].Length)) {
-				  zonas[j][i].tipo = Zona.TZona.PISO;
-				  if (zonas[j][i].representacion == (char)TCODSpecialCharacter.VertLine)
-					 zonas[j][i].representacion = (char)TCODSpecialCharacter.Cross;
+			   while (!TCODLine.step(ref i, ref j) && (i < zonas.Length) && (j < zonas[0].Length)) {
+				  zonas[i][j].tipo = Zona.TZona.PISO;
+				  if (zonas[i][j].representacion == (char)TCODSpecialCharacter.VertLine)
+					 zonas[i][j].representacion = (char)TCODSpecialCharacter.Cross;
 				  else
-					 zonas[j][i].representacion = (char)TCODSpecialCharacter.HorzLine;
-				  zonas[j][i].movilidad = Zona.TMovilidad.PASABLE;
+					 zonas[i][j].representacion = (char)TCODSpecialCharacter.HorzLine;
+				  zonas[i][j].movilidad = Zona.TMovilidad.PASABLE;
 			   }
 
 			   TCODLine.init(p2.x, p2.y, p3.x, p3.y);
 			   i = 0;
 			   j = 0;
-			   while (!TCODLine.step(ref i, ref j) && (j < zonas.Length) && (i < zonas[0].Length)) {
-				  zonas[j][i].tipo = Zona.TZona.PISO;
-				  if (zonas[j][i].representacion == (char)TCODSpecialCharacter.HorzLine)
-					 zonas[j][i].representacion = (char)TCODSpecialCharacter.Cross;
+			   while (!TCODLine.step(ref i, ref j) && (i < zonas.Length) && (j < zonas[0].Length)) {
+				  zonas[i][j].tipo = Zona.TZona.PISO;
+				  if (zonas[i][j].representacion == (char)TCODSpecialCharacter.HorzLine)
+					 zonas[i][j].representacion = (char)TCODSpecialCharacter.Cross;
 				  else
-					 zonas[j][i].representacion = (char)TCODSpecialCharacter.VertLine;
-				  zonas[j][i].movilidad = Zona.TMovilidad.PASABLE;
+					 zonas[i][j].representacion = (char)TCODSpecialCharacter.VertLine;
+				  zonas[i][j].movilidad = Zona.TMovilidad.PASABLE;
 			   }
 
 			   TCODLine.init(p3.x, p3.y, p4.x, p4.y);
 			   i = 0;
 			   j = 0;
-			   while (!TCODLine.step(ref i, ref j) && (j < zonas.Length) && (i < zonas[0].Length)) {
-				  zonas[j][i].tipo = Zona.TZona.PISO;
-				  if (zonas[j][i].representacion == (char)TCODSpecialCharacter.VertLine)
-					 zonas[j][i].representacion = (char)TCODSpecialCharacter.Cross;
+			   while (!TCODLine.step(ref i, ref j) && (i < zonas.Length) && (j < zonas[0].Length)) {
+				  zonas[i][j].tipo = Zona.TZona.PISO;
+				  if (zonas[i][j].representacion == (char)TCODSpecialCharacter.VertLine)
+					 zonas[i][j].representacion = (char)TCODSpecialCharacter.Cross;
 				  else
-					 zonas[j][i].representacion = (char)TCODSpecialCharacter.HorzLine;
-				  zonas[j][i].movilidad = Zona.TMovilidad.PASABLE;
+					 zonas[i][j].representacion = (char)TCODSpecialCharacter.HorzLine;
+				  zonas[i][j].movilidad = Zona.TMovilidad.PASABLE;
 			   }
 			}
 
@@ -101,10 +101,10 @@ namespace PruebasMarkov2 {
 		 Zona[][] zona1 = generarEscenario(an, al, objs);
 		 Zona[][] zona2 = generarEscenario(an, al, objs, probp);
 
-		 float[][] nueva_zona_float = new float[al][];
-		 for (int i = 0; i < al; i++) {
-			nueva_zona_float[i] = new float[an];
-			for (int j = 0; j < an; j++) {
+		 float[][] nueva_zona_float = new float[an][];
+		 for (int i = 0; i < an; i++) {
+			nueva_zona_float[i] = new float[al];
+			for (int j = 0; j < al; j++) {
 			   int valor1 = (zona1[i][j].tipo == Zona.TZona.PISO || zona1[i][j].tipo == Zona.TZona.OBJETIVO) ? 1 : 0;
 			   int valor2 = (zona2[i][j].tipo == Zona.TZona.PISO || zona2[i][j].tipo == Zona.TZona.OBJETIVO) ? 1 : 0;
 			   float nuevo_valor = 8 * (coef * valor1 + (1.0f - coef) * valor2);
@@ -112,8 +112,8 @@ namespace PruebasMarkov2 {
 			}
 		 }
 
-		 for (int i = 1; i < al - 1; i++) {
-			for (int j = 1; j < an - 1; j++) {
+		 for (int i = 1; i < an - 1; i++) {
+			for (int j = 1; j < al - 1; j++) {
 			   float region_zona = SumaAlrededor(ref nueva_zona_float, i, j);
 			   bool piso = (nueva_zona_float[i][j] * 5 + region_zona / 4) >= 40;
 			   if (piso && (zona1[i][j].tipo == Zona.TZona.PARED || zona1[i][j].tipo == Zona.TZona.LIMITE)) {
@@ -144,10 +144,10 @@ namespace PruebasMarkov2 {
 	  }
 
 	  public static Zona[][] generarEscenario(int an, int al, Juego.Objetivo[] objs) {
-		 Zona[][] resultado = new Zona[al][];
-		 for (int i = 0; i < al; i++) {
-			resultado[i] = new Zona[an];
-			for (int j = 0; j < an; j++) {
+		 Zona[][] resultado = new Zona[an][];
+		 for (int i = 0; i < an; i++) {
+			resultado[i] = new Zona[al];
+			for (int j = 0; j < al; j++) {
 			   resultado[i][j] = new Zona(Zona.TZona.LIMITE, Zona.TMovilidad.IMPASABLE);
 			}
 		 }
@@ -182,7 +182,7 @@ namespace PruebasMarkov2 {
 
 	  public static Zona[][] generarEscenario(int an, int al, Juego.Objetivo[] objs, float prob_paredes) {
 		 Zona[][] resultado;
-		 resultado = new Zona[al][];
+		 resultado = new Zona[an][];
 
 		 int cantidad_paredes = 0;
 		 int cantidad_zonas_cubiertas = 0;
@@ -193,20 +193,20 @@ namespace PruebasMarkov2 {
 
 		 Dictionary<Juego.Objetivo, Vector2> posicion_objetivos = new Dictionary<Juego.Objetivo, Vector2>();
 		 foreach (Juego.Objetivo objetivo in objs) {
-			Vector2 posicion_objetivo = new Vector2(R.Next(1, al - 1), R.Next(1, an - 1));
+			Vector2 posicion_objetivo = new Vector2(R.Next(1, an - 1), R.Next(1, al - 1));
 			posicion_objetivos.Add(objetivo, posicion_objetivo);
 			objetivo.posicion = posicion_objetivo;
 		 }
 
-		 resultado[0] = new Zona[an];
-		 for (int j = 0; j < an; j++) {
+		 resultado[0] = new Zona[al];
+		 for (int j = 0; j < al; j++) {
 			resultado[0][j] = new Zona(Zona.TZona.LIMITE, Zona.TMovilidad.IMPASABLE);
 		 }
-		 for (int i = 1; i < al - 1; i++) {
-			resultado[i] = new Zona[an];
+		 for (int i = 1; i < an - 1; i++) {
+			resultado[i] = new Zona[al];
 			resultado[i][0] = new Zona(Zona.TZona.LIMITE, Zona.TMovilidad.IMPASABLE);
 
-			for (int j = 1; j < an - 1; j++) {
+			for (int j = 1; j < al - 1; j++) {
 			   bool objetivo_posicionado = false;
 			   foreach (Juego.Objetivo objetivo in posicion_objetivos.Keys) {
 				  Vector2 posicion = posicion_objetivos[objetivo];
@@ -230,16 +230,16 @@ namespace PruebasMarkov2 {
 			   }
 			   cantidad_zonas_cubiertas++;
 			}
-			resultado[i][an - 1] = new Zona(Zona.TZona.LIMITE, Zona.TMovilidad.IMPASABLE);
+			resultado[i][al - 1] = new Zona(Zona.TZona.LIMITE, Zona.TMovilidad.IMPASABLE);
 		 }
-		 resultado[al - 1] = new Zona[an];
-		 for (int j = 0; j < an; j++) {
-			resultado[al - 1][j] = new Zona(Zona.TZona.LIMITE, Zona.TMovilidad.IMPASABLE);
+		 resultado[an - 1] = new Zona[al];
+		 for (int j = 0; j < al; j++) {
+			resultado[an - 1][j] = new Zona(Zona.TZona.LIMITE, Zona.TMovilidad.IMPASABLE);
 		 }
 
 		 for (int iteracion = 0; iteracion < 4; iteracion++) {
-			for (int i = 1; i < al - 1; i++) {
-			   for (int j = 1; j < an - 1; j++) {
+			for (int i = 1; i < an - 1; i++) {
+			   for (int j = 1; j < al - 1; j++) {
 				  int cant1 = ParedesN(ref resultado, i, j, an, al, 1);
 				  int cantn = ParedesN(ref resultado, i, j, an, al, 2);
 				  if ((cant1 >= 5) || (cantn <= 2)) {
@@ -257,8 +257,8 @@ namespace PruebasMarkov2 {
 		 }
 
 		 for (int iteracion = 0; iteracion < 0; iteracion++) {
-			for (int i = 1; i < al - 1; i++) {
-			   for (int j = 1; j < an - 1; j++) {
+			for (int i = 1; i < an - 1; i++) {
+			   for (int j = 1; j < al - 1; j++) {
 				  int cant1 = ParedesN(ref resultado, i, j, an, al, 1);
 				  if (cant1 >= 5) {
 					 resultado[i][j].tipo = Zona.TZona.PARED;
@@ -281,7 +281,7 @@ namespace PruebasMarkov2 {
 		 int cant = 0;
 		 for (int q = -1 * n; q <= 1 * n; q++) {
 			for (int k = -1 * n; k <= 1 * n; k++) {
-			   if (((i + q) >= 0 && (i + q) < alto) && ((j + k) >= 0 && (j + k) < ancho))
+			   if (((i + q) >= 0 && (i + q) < ancho) && ((j + k) >= 0 && (j + k) < alto))
 				  if ((zonas[i + q][j + k].tipo == Zona.TZona.PARED) || (zonas[i + q][j + k].tipo == Zona.TZona.LIMITE))
 					 cant++;
 			}

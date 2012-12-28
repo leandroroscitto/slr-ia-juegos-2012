@@ -343,7 +343,7 @@ namespace PruebasMarkov2 {
 	  public List<int> VerificarCumplimientoObjetivos(Estado estado) {
 		 bool[] objetivos_cumplidos = new bool[objetivos.Length];
 		 foreach (Vector2 posicion_jugador in estado.posicion_jugadores.Values) {
-			Juego.Zona zona = escenario_base[posicion_jugador.y][posicion_jugador.x];
+			Juego.Zona zona = escenario_base[posicion_jugador.x][posicion_jugador.y];
 			if (zona.tipo == Juego.Zona.TZona.OBJETIVO) {
 			   Juego.Objetivo objetivo = (Juego.Objetivo)zona;
 			   objetivos_cumplidos[objetivo.id] = true;
@@ -366,53 +366,5 @@ namespace PruebasMarkov2 {
 
 		 return nuevos_cumplidos;
 	  }
-
-
-	  public void ImprimirEscenario(int offsetx, int offsety) {
-		 for (int i = 0; i < escenario_base.Length; i++) {
-			for (int j = 0; j < escenario_base[i].Length; j++) {
-			   ImprimirZona(j + offsety, i + offsetx, escenario_base[i][j]);
-			}
-		 }
-	  }
-
-	  public void ImprimirJugadores(int i, int j) {
-		 foreach (Juego.Jugador jugador in jugadores) {
-			TCODConsole.root.printEx(jugador.posicion.x + i, jugador.posicion.y + j, TCODBackgroundFlag.Multiply, TCODAlignment.CenterAlignment, "" + jugador.representacion);
-		 }
-	  }
-
-	  public void ImprimirZona(int i, int j, Juego.Zona zona) {
-		 TCODConsole.root.print(i, j, "" + zona.representacion);
-		 TCODColor color_fondo, color_frente;
-		 switch (zona.tipo) {
-			case (Juego.Zona.TZona.LIMITE):
-			   color_fondo = TCODColor.darkerGrey;
-			   color_frente = TCODColor.darkestGrey;
-			   color_frente.scaleHSV(1f, 0.8f);
-			   break;
-			case (Juego.Zona.TZona.PARED):
-			   color_fondo = TCODColor.darkerGrey;
-			   color_frente = TCODColor.darkestGrey;
-			   color_frente.scaleHSV(1f, 0.8f);
-			   break;
-			case (Juego.Zona.TZona.PISO):
-			   color_fondo = TCODColor.lightGrey;
-			   color_frente = TCODColor.lightGrey.Multiply(1.35f);
-			   color_frente.scaleHSV(1f, 0.8f);
-			   break;
-			case (Juego.Zona.TZona.OBJETIVO):
-			   color_fondo = TCODColor.darkYellow;
-			   color_frente = TCODColor.black;
-			   break;
-			default:
-			   color_fondo = TCODColor.darkGrey;
-			   color_frente = TCODColor.lightGrey;
-			   break;
-		 }
-		 TCODConsole.root.setCharBackground(i, j, color_fondo);
-		 TCODConsole.root.setCharForeground(i, j, color_frente);
-	  }
-
    }
 }
