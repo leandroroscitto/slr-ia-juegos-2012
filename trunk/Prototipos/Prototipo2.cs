@@ -38,7 +38,7 @@ namespace PruebasMarkov2 {
 
 	  public override int GetHashCode() {
 		 //int multiplicador = (int)Math.Pow(10, Math.Floor(Math.Log10(Juego.alto)) + 1);
-		 return (x * Juego.alto + y * Juego.ancho);
+		 return (x + y * Juego.ancho);
 	  }
 
 	  public override string ToString() {
@@ -296,12 +296,12 @@ namespace PruebasMarkov2 {
 		 Random R = new Random();
 
 		 jugadores[0] = new Jugador(0, "Jugador_" + 0, '@', new Vector2(R.Next(1, ancho - 1), R.Next(1, alto - 1)), Jugador.TControl.DIRECTO);
-		 while (escenario[jugadores[0].posicion.y][jugadores[0].posicion.x].movilidad == Zona.TMovilidad.IMPASABLE)
+		 while (escenario[jugadores[0].posicion.x][jugadores[0].posicion.y].movilidad == Zona.TMovilidad.IMPASABLE)
 			jugadores[0].posicion = new Vector2(R.Next(1, ancho - 1), R.Next(1, alto - 1));
 
 		 for (int q = 1; q < n; q++) {
 			jugadores[q] = new Jugador(q, "Jugador_" + q, '$', new Vector2(R.Next(1, ancho - 1), R.Next(1, alto - 1)), Jugador.TControl.IA);
-			while (escenario[jugadores[q].posicion.y][jugadores[q].posicion.x].movilidad == Zona.TMovilidad.IMPASABLE)
+			while (escenario[jugadores[q].posicion.x][jugadores[q].posicion.y].movilidad == Zona.TMovilidad.IMPASABLE)
 			   jugadores[q].posicion = new Vector2(R.Next(1, ancho - 1), R.Next(1, alto - 1));
 		 }
 	  }
@@ -323,10 +323,10 @@ namespace PruebasMarkov2 {
 
 	  public void PrepararMapaFov() {
 		 mapa_fov = new TCODMap(ancho, alto);
-		 for (int i = 0; i < alto; i++) {
-			for (int j = 0; j < ancho; j++) {
+		 for (int i = 0; i < ancho; i++) {
+			for (int j = 0; j < alto; j++) {
 			   bool pasable = (escenario[i][j].movilidad == Zona.TMovilidad.PASABLE);
-			   mapa_fov.setProperties(j, i, pasable, pasable);
+			   mapa_fov.setProperties(i, j, pasable, pasable);
 			}
 		 }
 		 mapa_dist = new TCODPath(mapa_fov, 1.0f);
@@ -385,7 +385,7 @@ namespace PruebasMarkov2 {
 	  public void VerificarCumplimientoObjetivos() {
 		 bool[] objetivos_pisados = new bool[objetivos.Length];
 		 foreach (Jugador jugador in jugadores) {
-			Juego.Zona zona = escenario[jugador.posicion.y][jugador.posicion.x];
+			Juego.Zona zona = escenario[jugador.posicion.x][jugador.posicion.y];
 			if (zona.tipo == Juego.Zona.TZona.OBJETIVO) {
 			   Juego.Objetivo objetivo = (Juego.Objetivo)zona;
 			   objetivos_pisados[objetivo.id] = true;
@@ -478,7 +478,7 @@ namespace PruebasMarkov2 {
 			   posicion_deseada.x++;
 			   break;
 		 }
-		 if ((posicion_deseada.x < escenario[0].Length && posicion_deseada.y < escenario.Length) && (posicion_deseada.x >= 0 && posicion_deseada.y >= 0) && escenario[posicion_deseada.y][posicion_deseada.x].movilidad == Zona.TMovilidad.PASABLE) {
+		 if ((posicion_deseada.y < escenario[0].Length && posicion_deseada.x < escenario.Length) && (posicion_deseada.x >= 0 && posicion_deseada.y >= 0) && escenario[posicion_deseada.x][posicion_deseada.y].movilidad == Zona.TMovilidad.PASABLE) {
 			foreach (Jugador otro_jugador in jugadores) {
 			   if ((otro_jugador != jugador) && (otro_jugador.posicion.Equals(posicion_deseada)))
 				  return false;
@@ -585,7 +585,7 @@ namespace PruebasMarkov2 {
 	  public void ImprimirGUI() {
 		 int alto_minimo = Math.Max(25, alto + 2);
 		 TCODConsole.root.printFrame(0, 0, ancho_ventana, alto_ventana, false, TCODBackgroundFlag.Alpha, "Pruebas Markov");
-		 TCODConsole.root.printFrame(offsety - 1, offsetx - 1, ancho + 2, alto_minimo, false, TCODBackgroundFlag.Alpha, "Escenario");
+		 TCODConsole.root.printFrame(offsetx - 1, offsety - 1, ancho + 2, alto_minimo, false, TCODBackgroundFlag.Alpha, "Escenario");
 
 		 // ancho_ventana - (offsetx + ancho + 2)
 		 TCODConsole.root.printFrame(offsetx + ancho + 1, offsety - 1, 48, alto_minimo, false, TCODBackgroundFlag.Alpha, "Informacion");
@@ -606,20 +606,20 @@ namespace PruebasMarkov2 {
 		 foreach (Jugador jugador in jugadores) {
 			mapa_fov.computeFov(jugador.posicion.x, jugador.posicion.y, radio, true);
 
-			for (int i = 0; i < alto; i++) {
-			   for (int j = 0; j < ancho; j++) {
-				  bool en_fov = mapa_fov.isInFov(j, i);
+			for (int i = 0; i < ancho; i++) {
+			   for (int j = 0; j < alto; j++) {
+				  bool en_fov = mapa_fov.isInFov(i, j);
 				  if (en_fov) {
-					 int dist_cuadrado = (int)(Math.Pow(jugador.posicion.y - i, 2) + Math.Pow(jugador.posicion.x - j, 2));
+					 int dist_cuadrado = (int)(Math.Pow(jugador.posicion.x - i, 2) + Math.Pow(jugador.posicion.y - j, 2));
 					 double intensidad_coef1 = 1.0f / (1.0f + dist_cuadrado / (radio / TCODRandom.getInstance().getGaussianRangeFloat(1, 2)));
 					 double intensidad_coef2 = intensidad_coef1 - 1.0f / (1.0f + radio * radio);
 					 double intensidad_coef3 = intensidad_coef2 / (1.0f - 1.0f / (1.0f + radio * radio));
 					 TCODColor color_llama = TCODColor.Interpolate(colores[jugador.id * jugadores.Length], colores[jugador.id * jugadores.Length + 1], (float)intensidad_coef3);
 					 TCODColor color = TCODColor.Interpolate(TCODColor.black, color_llama, (float)intensidad_coef3);
 					 if (escenario[i][j].tipo == Zona.TZona.PARED || escenario[i][j].tipo == Zona.TZona.LIMITE)
-						TCODConsole.root.setCharBackground(j + offsety, i + offsetx, color.Multiply(0.25f), TCODBackgroundFlag.Add);
+						TCODConsole.root.setCharBackground(i + offsetx, j + offsety, color.Multiply(0.25f), TCODBackgroundFlag.Add);
 					 else
-						TCODConsole.root.setCharBackground(j + offsety, i + offsetx, color, TCODBackgroundFlag.Add);
+						TCODConsole.root.setCharBackground(i + offsetx, j + offsety, color, TCODBackgroundFlag.Add);
 				  }
 			   }
 			}
@@ -627,9 +627,9 @@ namespace PruebasMarkov2 {
 	  }
 
 	  public void ImprimirEscenario(int offsetx, int offsety) {
-		 for (int i = 0; i < alto; i++) {
-			for (int j = 0; j < ancho; j++) {
-			   ImprimirZona(j + offsety, i + offsetx, escenario[i][j]);
+		 for (int i = 0; i < ancho; i++) {
+			for (int j = 0; j < alto; j++) {
+			   ImprimirZona(i + offsetx, j + offsety, escenario[i][j]);
 			}
 		 }
 	  }
@@ -642,20 +642,26 @@ namespace PruebasMarkov2 {
 	  }
 
 	  public void ImprimirAccionesGUI() {
-		 for (int x = 0; x < alto; x++) {
-			for (int y = 0; y < ancho; y++) {
+		 List<Objetivo> en_objetivo = new List<Objetivo>();
+		 foreach (Jugador jugador in jugadores) {
+			if (jugador.id != jugador_AccionesGUI && escenario[jugador.posicion.x][jugador.posicion.y].tipo == Zona.TZona.OBJETIVO)
+			   en_objetivo.Add((Objetivo)escenario[jugador.posicion.x][jugador.posicion.y]);
+		 }
+
+		 for (int x = 0; x < ancho; x++) {
+			for (int y = 0; y < alto; y++) {
 			   bool en_jugador = false;
 			   if (escenario[x][y].movilidad == Zona.TMovilidad.PASABLE) {
 				  Vector2[] posicion_jugadores = new Vector2[jugadores.Length];
 				  foreach (Jugador jugador in jugadores) {
 					 if (jugador.id != jugador_AccionesGUI) {
-						if (jugador.posicion.x == y && jugador.posicion.y == x) {
+						if (jugador.posicion.x == x && jugador.posicion.y == y) {
 						   en_jugador = true;
 						}
 						posicion_jugadores[jugador.id] = jugador.posicion;
 					 }
 					 else {
-						posicion_jugadores[jugador_AccionesGUI] = new Vector2(y, x);
+						posicion_jugadores[jugador_AccionesGUI] = new Vector2(x, y);
 					 }
 				  }
 				  if (en_jugador)
@@ -666,16 +672,37 @@ namespace PruebasMarkov2 {
 						objetivos_cumplidos += objetivo.cumplido ? 1 : 0;
 					 }
 
+					 List<Objetivo> nuevos_objetivos = new List<Objetivo>();
+					 if (escenario[x][y].tipo == Zona.TZona.OBJETIVO) {
+						Objetivo objetivo = (Objetivo)escenario[x][y];
+						foreach (Objetivo objvo in en_objetivo) {
+						   if (objetivo == objvo.complementario && !objetivo.cumplido) {
+							  objetivos_cumplidos += 2;
+							  nuevos_objetivos.Add(objvo);
+							  nuevos_objetivos.Add(objetivo);
+							  break;
+						   }
+						}
+					 }
+
 					 List<Arbol_Estados.Nodo_Estado> estados = resolucion.arbol_estados.estados_dict[objetivos_cumplidos][posicion_jugadores];
 					 Estado estado = null;
 
 					 foreach (Arbol_Estados.Nodo_Estado nodo_estado in estados) {
 						bool coincide = true;
 						foreach (Objetivo objetivo in objetivos) {
-						   if (objetivo.cumplido && !nodo_estado.estado_actual.objetivos_cumplidos.Contains(objetivo.id))
-							  coincide = false;
-						   if (!objetivo.cumplido && !nodo_estado.estado_actual.objetivos_no_cumplidos.Contains(objetivo.id))
-							  coincide = false;
+						   if (!nuevos_objetivos.Contains(objetivo)) {
+							  if (objetivo.cumplido && !nodo_estado.estado_actual.objetivos_cumplidos.Contains(objetivo.id))
+								 coincide = false;
+							  if (!objetivo.cumplido && !nodo_estado.estado_actual.objetivos_no_cumplidos.Contains(objetivo.id))
+								 coincide = false;
+						   }
+						   else {
+							  if (!nodo_estado.estado_actual.objetivos_cumplidos.Contains(objetivo.id))
+								 coincide = false;
+							  if (nodo_estado.estado_actual.objetivos_no_cumplidos.Contains(objetivo.id))
+								 coincide = false;
+						   }
 						}
 						if (coincide) {
 						   estado = nodo_estado.estado_actual;
@@ -716,10 +743,12 @@ namespace PruebasMarkov2 {
 					 }
 
 					 if (objetivos[objetivo_AccionesGUI].posicion.x == x && objetivos[objetivo_AccionesGUI].posicion.y == y)
-						TCODConsole.root.setCharBackground(y + offsety, x + offsetx, TCODColor.yellow);
+						TCODConsole.root.setCharBackground(x + offsetx, y + offsety, TCODColor.yellow);
+					 else if (jugadores[jugador_AccionesGUI].posicion.x == x && jugadores[jugador_AccionesGUI].posicion.y == y)
+						TCODConsole.root.setCharBackground(x + offsetx, y + offsety, TCODColor.blue);
 					 else
-						TCODConsole.root.setCharBackground(y + offsety, x + offsetx, TCODColor.red);
-					 TCODConsole.root.putChar(y + offsety, x + offsetx, (int)direccion);
+						TCODConsole.root.setCharBackground(x + offsetx, y + offsety, TCODColor.red);
+					 TCODConsole.root.putChar(x + offsetx, y + offsety, (int)direccion);
 				  }
 			   }
 			}

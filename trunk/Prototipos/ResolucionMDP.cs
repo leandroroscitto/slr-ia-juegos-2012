@@ -11,8 +11,9 @@ namespace PruebasMarkov2 {
 			   int indice = s.estados_hijos.IndexOf(sp);
 
 			   // PRUEBAS
-			   if (a.direccion == TDireccion.C)
-				  return 0;
+			   //if (a.direccion == TDireccion.C)
+			   //   if (sp.estado_actual.objetivos_cumplidos.Count == s.estado_actual.objetivos_cumplidos.Count)
+			   //      return 0;
 			   // PRUEBAS
 
 			   if ((indice >= 0) && (s.acciones_hijos[indice] == a)) {
@@ -39,7 +40,7 @@ namespace PruebasMarkov2 {
 
 		 public override float valor(Arbol_Estados.Nodo_Estado s, Juego.Objetivo o, int actor_id) {
 			float resultado;
-			resultado = float.MaxValue / 2;
+			resultado = (s.estado_actual.escenario_base.Length * s.estado_actual.escenario_base[0].Length) *2;
 			resultado += (s.estado_actual.objetivos_cumplidos.Count - s.estado_actual.objetivos_no_cumplidos.Count);
 			if (s.estado_actual.objetivos_no_cumplidos.Contains(o.id)) {
 			   float distancia_minima = float.MaxValue;

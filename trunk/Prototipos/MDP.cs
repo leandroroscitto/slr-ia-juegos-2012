@@ -63,6 +63,23 @@ namespace PruebasMarkov2 {
 
 		 //Calcular_Utilidad_VI();
 		 Calcular_Utilidad_PI();
+
+		 float max_utilidad = float.MinValue;
+		 for (int i = 0; i < Utilidad.Length; i++) {
+			for (int j = 0; j < Utilidad[i].Length; j++) {
+			   for (int q = 0; q < Utilidad[i][j].Length; q++) {
+				  max_utilidad = Math.Max(max_utilidad, Utilidad[i][j][q]);
+			   }
+			}
+		 }
+
+		 for (int i = 0; i < Utilidad.Length; i++) {
+			for (int j = 0; j < Utilidad[i].Length; j++) {
+			   for (int q = 0; q < Utilidad[i][j].Length; q++) {
+				  Utilidad[i][j][q] /= max_utilidad;
+			   }
+			}
+		 }
 	  }
 
 	  public void Calcular_Utilidad_PI() {
@@ -171,7 +188,7 @@ namespace PruebasMarkov2 {
 			   if (porcentaje % 10 == 0)
 				  Console.WriteLine("Progreso: " + (int)porcentaje + ", diferencia: " + diferencia_total);
 			}
-		 } while (!sincambios && diferencia_total > 0.0002f);
+		 } while (!sincambios);// && diferencia_total > 0.0002f);
 
 		 Utilidad = Utilidad_Aux;
 		 Politica = Politica_Aux;
@@ -181,7 +198,7 @@ namespace PruebasMarkov2 {
 	  public void Calcular_Utilidad_VI() {
 		 float[][][] Utilidad_Aux = new float[numero_actores][][];
 		 A[][][] Politica_Aux = new A[numero_actores][][];
-		 float[][][] Utilidad = new float[numero_actores][][];
+		 Utilidad = new float[numero_actores][][];
 		 for (int actor = 0; actor < numero_actores; actor++) {
 			Utilidad_Aux[actor] = new float[objetivos.Count][];
 			Politica_Aux[actor] = new A[objetivos.Count][];

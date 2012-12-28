@@ -234,7 +234,7 @@ namespace PruebasMarkov2 {
 			   if (posicion_objetivo.x >= ancho - 1)
 				  posicion_objetivo.x--;
 
-			   zonas[posicion_objetivo.y][posicion_objetivo.x] = objetivo;
+			   zonas[posicion_objetivo.x][posicion_objetivo.y] = objetivo;
 			   objetivo.posicion = posicion_objetivo;
 			}
 
