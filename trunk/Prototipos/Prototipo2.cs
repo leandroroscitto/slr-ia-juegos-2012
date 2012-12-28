@@ -153,6 +153,10 @@ namespace PruebasMarkov2 {
 	  public Dictionary<int, Arbol_Estados.Nodo_Estado> historial_estados;
 	  public int turno;
 
+	  public bool imprimir_AccionesGUI;
+	  public int jugador_AccionesGUI;
+	  public int objetivo_AccionesGUI;
+
 	  public Juego(int an, int al, int nj, int no) {
 		 ancho = an;
 		 alto = al;
@@ -188,17 +192,46 @@ namespace PruebasMarkov2 {
 		 while (!TCODConsole.isWindowClosed()) {
 			// Controles.
 			//TCODKey tecla = TCODConsole.checkForKeypress((int)TCODKeyStatus.KeyPressed);
-			TCODKey tecla = TCODConsole.waitForKeypress(false);
+			bool tecla_opciones = false;
+			TCODKey tecla = TCODConsole.waitForKeypress(true);
 			if (tecla.LeftAlt && tecla.KeyCode == TCODKeyCode.Enter) {
 			   TCODConsole.setFullscreen(!TCODConsole.isFullscreen());
+			   tecla_opciones = true;
 			}
-			if (tecla.KeyCode == TCODKeyCode.Escape)
+			if (tecla.KeyCode == TCODKeyCode.Escape) {
+			   tecla_opciones = true;
 			   break;
+			}
 
-			// Acciones a realizar.
-			Accion[] acciones = BuscarAcciones(tecla);
-			RealizarAcciones(acciones);
-			VerificarCumplimientoObjetivos();
+			if (tecla.KeyCode == TCODKeyCode.End) {
+			   imprimir_AccionesGUI = !imprimir_AccionesGUI;
+			   tecla_opciones = true;
+			}
+
+			if (tecla.KeyCode == TCODKeyCode.KeypadDivide) {
+			   jugador_AccionesGUI = Math.Abs(jugador_AccionesGUI + 1) % jugadores.Length;
+			   tecla_opciones = true;
+			}
+			if (tecla.KeyCode == TCODKeyCode.KeypadMultiply) {
+			   jugador_AccionesGUI = Math.Abs(jugador_AccionesGUI - 1) % jugadores.Length;
+			   tecla_opciones = true;
+			}
+
+			if (tecla.KeyCode == TCODKeyCode.KeypadAdd) {
+			   objetivo_AccionesGUI = Math.Abs(objetivo_AccionesGUI + 1) % objetivos.Length;
+			   tecla_opciones = true;
+			}
+			if (tecla.KeyCode == TCODKeyCode.KeypadSubtract) {
+			   objetivo_AccionesGUI = Math.Abs(objetivo_AccionesGUI - 1) % objetivos.Length;
+			   tecla_opciones = true;
+			}
+
+			if (!tecla_opciones) {
+			   // Acciones a realizar.
+			   Accion[] acciones = BuscarAcciones(tecla);
+			   RealizarAcciones(acciones);
+			   VerificarCumplimientoObjetivos();
+			}
 
 			// Impresion por pantalla.
 			TCODConsole.root.setBackgroundColor(TCODColor.darkerGrey);
@@ -208,7 +241,9 @@ namespace PruebasMarkov2 {
 			ImprimirEscenario(offsetx, offsety);
 			ImprimirJugadores(offsety, offsetx);
 			ImprimirFov(offsetx, offsety, 8);
-			ImprimirAccionesGUI();
+
+			if (imprimir_AccionesGUI)
+			   ImprimirAccionesGUI();
 
 			TCODConsole.flush();
 		 }
@@ -365,16 +400,6 @@ namespace PruebasMarkov2 {
 	  }
 
 	  public Accion[] BuscarAcciones(TCODKey key) {
-		 if (key.KeyCode == TCODKeyCode.KeypadDivide)
-			jugador_AccionesGUI = Math.Abs(jugador_AccionesGUI + 1) % jugadores.Length;
-		 if (key.KeyCode == TCODKeyCode.KeypadMultiply)
-			jugador_AccionesGUI = Math.Abs(jugador_AccionesGUI - 1) % jugadores.Length;
-
-		 if (key.KeyCode == TCODKeyCode.KeypadAdd)
-			objetivo_AccionesGUI = Math.Abs(objetivo_AccionesGUI + 1) % objetivos.Length;
-		 if (key.KeyCode == TCODKeyCode.KeypadSubtract)
-			objetivo_AccionesGUI = Math.Abs(objetivo_AccionesGUI - 1) % objetivos.Length;
-
 		 Accion[] acciones_realizadas = new Accion[jugadores.Length];
 		 Accion accion_realizada;
 		 turno++;
@@ -616,9 +641,6 @@ namespace PruebasMarkov2 {
 		 }
 	  }
 
-
-	  public int jugador_AccionesGUI;
-	  public int objetivo_AccionesGUI;
 	  public void ImprimirAccionesGUI() {
 		 for (int x = 0; x < alto; x++) {
 			for (int y = 0; y < ancho; y++) {
@@ -693,7 +715,7 @@ namespace PruebasMarkov2 {
 						   break;
 					 }
 
-					 if (objetivos[objetivo_AccionesGUI].posicion.x == y && objetivos[objetivo_AccionesGUI].posicion.y == x)
+					 if (objetivos[objetivo_AccionesGUI].posicion.x == x && objetivos[objetivo_AccionesGUI].posicion.y == y)
 						TCODConsole.root.setCharBackground(y + offsety, x + offsetx, TCODColor.yellow);
 					 else
 						TCODConsole.root.setCharBackground(y + offsety, x + offsetx, TCODColor.red);
