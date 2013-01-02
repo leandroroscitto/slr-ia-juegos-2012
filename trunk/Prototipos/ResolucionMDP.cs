@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
+﻿
 namespace PruebasMarkov2 {
    public class ResolucionMDP {
 	  public class TransicionJuego : Transicion_MDP<Arbol_Estados.Nodo_Estado, Accion> {
@@ -10,21 +6,16 @@ namespace PruebasMarkov2 {
 			if (s.estados_hijos != null) {
 			   int indice = s.estados_hijos.IndexOf(sp);
 
-			   // PRUEBAS
-			   //if (a.direccion == TDireccion.C)
-			   //   if (sp.estado_actual.objetivos_cumplidos.Count == s.estado_actual.objetivos_cumplidos.Count)
-			   //      return 0;
-			   // PRUEBAS
-
 			   if ((indice >= 0) && (s.acciones_hijos[indice] == a)) {
-				  return (1f / s.acciones_hijos.Count);
-				  //return 1f;
+				  //return (1f / s.acciones_hijos.Count);
+				  return 1f;
 			   }
 			   else
 				  return 0f;
 			}
 			else {
 			   // Nunca deberia llegar por aca.
+			   System.Diagnostics.Debug.Assert(false);
 			   return -1f;
 			}
 		 }

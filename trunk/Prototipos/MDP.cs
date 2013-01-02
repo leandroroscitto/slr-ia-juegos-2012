@@ -7,7 +7,7 @@ namespace PruebasMarkov2 {
    public abstract class Estado_MDP {
 	  public int id;
 
-	  public abstract Estado_MDP[] proximosEstados();
+	  public abstract Estado_MDP[] proximosEstados(int actor_id);
 	  public abstract Accion_MDP[] accionesValidas(int actor_id);
 	  public abstract Estado_MDP hijoAccion(Accion_MDP a);
 	  public abstract Estado_MDP padreAccion(Accion_MDP a);
@@ -94,11 +94,11 @@ namespace PruebasMarkov2 {
 			   Utilidad_Aux[actor][objetivo_id] = new float[estados.Count];
 			   Politica_Aux[actor][objetivo_id] = new A[estados.Count];
 			   Value_Policy[actor][objetivo_id] = new float[estados.Count];
-			   foreach (S i in estados) {
-				  Utilidad_Aux[actor][objetivo_id][i.id] = 0;
-				  Politica_Aux[actor][objetivo_id][i.id] = null;
-				  Value_Policy[actor][objetivo_id][i.id] = 0;
-			   }
+			   //foreach (S i in estados) {
+			   //   Utilidad_Aux[actor][objetivo_id][i.id] = 0;
+			   //   Politica_Aux[actor][objetivo_id][i.id] = null;
+			   //   Value_Policy[actor][objetivo_id][i.id] = 0;
+			   //}
 			}
 		 }
 
@@ -117,6 +117,7 @@ namespace PruebasMarkov2 {
 		 bool sincambios;
 		 float diferencia_total;
 		 do {
+			int cont_porcentaje = 10;
 			// Value_Determination
 			foreach (S i in estados) {
 			   for (int actor = 0; actor < numero_actores; actor++) {
@@ -143,11 +144,12 @@ namespace PruebasMarkov2 {
 			   for (int actor = 0; actor < numero_actores; actor++) {
 				  for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
 					 foreach (A a in i.accionesValidas(actor)) {
-						float value = 0;
-						foreach (S j in i.proximosEstados()) {
-						   // Estaba calculando la utilidad para solo un jugador de la accion:
-						   value += transicion.valor(a, i, j) * Utilidad_Aux[actor][objetivo_id][j.id];
-						}
+						//float value = 0;
+						//foreach (S j in i.proximosEstados(actor)) {
+						//   // Estaba calculando la utilidad para solo un jugador de la accion:
+						//   value += transicion.valor(a, i, j) * Utilidad_Aux[actor][objetivo_id][j.id];
+						//}
+						float value = transicion.valor(a, i, (S)i.hijoAccion(a)) * Utilidad_Aux[actor][objetivo_id][i.hijoAccion(a).id];
 						if (value > value_max[actor][objetivo_id]) {
 						   value_max[actor][objetivo_id] = value;
 						   action_max[actor][objetivo_id] = a;
@@ -167,9 +169,11 @@ namespace PruebasMarkov2 {
 
 			   for (int actor = 0; actor < numero_actores; actor++) {
 				  for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
-					 foreach (S j in i.proximosEstados()) {
-						value_policy[actor][objetivo_id] += transicion.valor(Politica_Aux[actor][objetivo_id][i.id], i, j) * Utilidad_Aux[actor][objetivo_id][j.id];
-					 }
+					 //foreach (S j in i.proximosEstados(actor)) {
+					 //   value_policy[actor][objetivo_id] += transicion.valor(Politica_Aux[actor][objetivo_id][i.id], i, j) * Utilidad_Aux[actor][objetivo_id][j.id];
+					 //}
+					 A accion_politica = Politica_Aux[actor][objetivo_id][i.id];
+					 value_policy[actor][objetivo_id] = transicion.valor(accion_politica, i, (S)i.hijoAccion(accion_politica)) * Utilidad_Aux[actor][objetivo_id][i.hijoAccion(accion_politica).id];
 
 					 float diferencia = Math.Abs(value_max[actor][objetivo_id] - value_policy[actor][objetivo_id]);
 					 if (diferencia != 0) {
@@ -185,8 +189,11 @@ namespace PruebasMarkov2 {
 			   }
 
 			   float porcentaje = (i.id * 100f / estados.Count);
-			   if (porcentaje % 10 == 0)
+
+			   if (porcentaje % 10 <= 0.1 && porcentaje/10 > (10-cont_porcentaje)) {
 				  Console.WriteLine("Progreso: " + (int)porcentaje + ", diferencia: " + diferencia_total);
+				  cont_porcentaje--;
+			   }
 			}
 		 } while (!sincambios);// && diferencia_total > 0.0002f);
 
@@ -240,7 +247,7 @@ namespace PruebasMarkov2 {
 			   for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
 				  foreach (A a in i.accionesValidas(-1)) {
 					 float value = 0;
-					 foreach (S j in i.proximosEstados()) {
+					 foreach (S j in i.proximosEstados(a.actor_id)) {
 						value += transicion.valor(a, i, j) * Utilidad_Aux[a.actor_id][objetivo_id][j.id];
 					 }
 					 if (value > value_max[a.actor_id][objetivo_id]) {

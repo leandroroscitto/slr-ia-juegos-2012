@@ -7,12 +7,14 @@ namespace PruebasMarkov2 {
 	  public class Nodo_Estado : Estado_MDP {
 		 public Estado estado_actual;
 		 public List<Nodo_Estado> estados_padres;
+		 // <id_jugador, estados>
+		 public Dictionary<int, List<Nodo_Estado>> estados_padres_actor;
 		 public List<Nodo_Estado> estados_hijos;
-		 // <id_jugador,id_accion>
+		 // <id_jugador, estados>
+		 public Dictionary<int, List<Nodo_Estado>> estados_hijos_actor;
 		 public List<Accion> acciones_padres;
 		 // <id_jugador, acciones>
 		 public Dictionary<int, List<Accion>> acciones_padres_actor;
-		 // <id_jugador,id_accion>
 		 public List<Accion> acciones_hijos;
 		 // <id_jugador, acciones>
 		 public Dictionary<int, List<Accion>> acciones_hijos_actor;
@@ -20,7 +22,9 @@ namespace PruebasMarkov2 {
 		 public Nodo_Estado(Estado e) {
 			estado_actual = e;
 			estados_padres = new List<Nodo_Estado>();
+			estados_padres_actor = new Dictionary<int, List<Nodo_Estado>>();
 			estados_hijos = new List<Nodo_Estado>();
+			estados_hijos_actor = new Dictionary<int, List<Nodo_Estado>>();
 			acciones_padres = new List<Accion>();
 			acciones_padres_actor = new Dictionary<int, List<Accion>>();
 			acciones_hijos = new List<Accion>();
@@ -29,11 +33,14 @@ namespace PruebasMarkov2 {
 			foreach (int jugador_id in e.posicion_jugadores.Keys) {
 			   acciones_padres_actor.Add(jugador_id, new List<Accion>());
 			   acciones_hijos_actor.Add(jugador_id, new List<Accion>());
+			   estados_padres_actor.Add(jugador_id, new List<Nodo_Estado>());
+			   estados_hijos_actor.Add(jugador_id, new List<Nodo_Estado>());
 			}
 		 }
 
 		 public int AgregarHijo(Nodo_Estado h, Accion ja) {
 			estados_hijos.Add(h);
+			estados_hijos_actor[ja.actor_id].Add(h);
 			acciones_hijos.Add(ja);
 			acciones_hijos_actor[ja.actor_id].Add(ja);
 
@@ -43,6 +50,7 @@ namespace PruebasMarkov2 {
 
 		 public int AgregarPadre(Nodo_Estado p, Accion ja) {
 			estados_padres.Add(p);
+			estados_padres_actor[ja.actor_id].Add(p);
 			acciones_padres.Add(ja);
 			acciones_padres_actor[ja.actor_id].Add(ja);
 
@@ -74,8 +82,13 @@ namespace PruebasMarkov2 {
 			}
 		 }
 
-		 public override Estado_MDP[] proximosEstados() {
-			return estados_hijos.ToArray();
+		 public override Estado_MDP[] proximosEstados(int actor_id) {
+			if (actor_id == -1) {
+			   return estados_hijos.ToArray();
+			}
+			else {
+			   return estados_hijos_actor[actor_id].ToArray();
+			}
 		 }
 
 		 public override string ToString() {
