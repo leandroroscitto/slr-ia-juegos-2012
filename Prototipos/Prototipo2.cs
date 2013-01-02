@@ -164,7 +164,7 @@ namespace PruebasMarkov2 {
 		 offsetx = 2;
 		 offsety = 2;
 		 ancho_ventana = 80;
-		 alto_ventana = 45;
+		 alto_ventana = 60;
 		 alto_ventana_acciones = alto_ventana - (offsety + alto + 4);
 
 		 log_acciones = new List<string>();
@@ -428,9 +428,6 @@ namespace PruebasMarkov2 {
 					 if (obj_p0 == null) {
 						obj_p0 = objetivos[R.Next(0, objetivos.Length)];
 					 }
-					 else {
-						obj_p0 = obj_p0.complementario;
-					 }
 					 acciones_realizadas[i] = resolucion.mdp.Politica[jugador.id][obj_p0.complementario.id][nodo_estado_actual.estado_actual.id];
 				  }
 				  else
@@ -538,6 +535,8 @@ namespace PruebasMarkov2 {
 			informacion += "  " + jugador.nombre + ": " + jugador.posicion.ToString() + "\n";
 		 }
 
+		 informacion += "\n";
+
 		 informacion += "Acciones posibles:\n";
 		 foreach (Jugador jugador in jugadores) {
 			informacion += "  " + jugador.nombre + "\n";
@@ -559,6 +558,8 @@ namespace PruebasMarkov2 {
 			informacion += "\n";
 		 }
 
+		 informacion += "\n";
+
 		 informacion += "Inferencia de objetivos:\n";
 		 float[] valores;
 		 foreach (Jugador jugador in jugadores) {
@@ -570,6 +571,8 @@ namespace PruebasMarkov2 {
 			informacion += "\n";
 		 }
 
+		 informacion += "\n";
+
 		 informacion += "Utilidad de estado para cada jugador/estado:\n";
 		 foreach (Jugador jugador in jugadores) {
 			informacion += "  " + jugador.nombre + ":\n";
@@ -579,11 +582,22 @@ namespace PruebasMarkov2 {
 			informacion += "\n";
 		 }
 
+		 informacion += "\n";
+
+		 informacion += "Distancia para cada jugador/estado:\n";
+		 foreach (Jugador jugador in jugadores) {
+			informacion += "  " + jugador.nombre + ":\n";
+			foreach (Objetivo objetivo in objetivos) {
+			   informacion += objetivo.representacion + ":" + jugador.posicion.distancia(objetivo.posicion) + " ";
+			}
+			informacion += "\n";
+		 }
+
 		 return informacion;
 	  }
 
 	  public void ImprimirGUI() {
-		 int alto_minimo = Math.Max(25, alto + 2);
+		 int alto_minimo = Math.Max(45, alto + 2);
 		 TCODConsole.root.printFrame(0, 0, ancho_ventana, alto_ventana, false, TCODBackgroundFlag.Alpha, "Pruebas Markov");
 		 TCODConsole.root.printFrame(offsetx - 1, offsety - 1, ancho + 2, alto_minimo, false, TCODBackgroundFlag.Alpha, "Escenario");
 
@@ -809,8 +823,8 @@ namespace PruebasMarkov2 {
 		 Accion.direccion_complementaria.Add(TDireccion.DR, TDireccion.UL);
 		 Accion.direccion_complementaria.Add(TDireccion.DL, TDireccion.UR);
 
-		 int ancho = 8;
-		 int alto = 8;
+		 int ancho = 15;
+		 int alto = 15;
 
 		 Juego juego = new Juego(ancho, alto, 2, 4);
 	  }
