@@ -1,4 +1,5 @@
 ﻿
+using System;
 namespace PruebasMarkov2 {
    public class ResolucionMDP {
 	  public class TransicionJuego : Transicion_MDP<Arbol_Estados.Nodo_Estado, Accion> {
@@ -31,7 +32,7 @@ namespace PruebasMarkov2 {
 
 		 public override float valor(Arbol_Estados.Nodo_Estado s, Juego.Objetivo o, int actor_id) {
 			float resultado;
-			resultado = (s.estado_actual.escenario_base.Length * s.estado_actual.escenario_base[0].Length) *2;
+			resultado = (s.estado_actual.escenario_base.Length * s.estado_actual.escenario_base[0].Length) * 2;
 			resultado += (s.estado_actual.objetivos_cumplidos.Count - s.estado_actual.objetivos_no_cumplidos.Count);
 			if (s.estado_actual.objetivos_no_cumplidos.Contains(o.id)) {
 			   float distancia_minima = float.MaxValue;
@@ -40,15 +41,15 @@ namespace PruebasMarkov2 {
 					 resultado -= s.estado_actual.posicion_jugadores[actor].distancia(o.posicion);
 				  }
 				  else {
-					 //distancia_minima = Math.Min(distancia_minima, s.estado_actual.posicion_jugadores[actor].distancia(o.complementario.posicion));
-					 distancia_minima = 0;
+					 distancia_minima = Math.Min(distancia_minima, s.estado_actual.posicion_jugadores[actor].distancia(o.complementario.posicion));
+					 //distancia_minima = 0;
 				  }
 			   }
 			   if (s.estado_actual.posicion_jugadores.Count > 1)
 				  resultado -= distancia_minima;
 			}
 			else {
-			   //System.Diagnostics.Debug.Assert(false);
+			   resultado *= 2;
 			}
 
 			return resultado;

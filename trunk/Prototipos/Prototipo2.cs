@@ -311,6 +311,7 @@ namespace PruebasMarkov2 {
 		 while (!continuar) {
 			//escenario = Generador_Escenario.generarEscenario(ancho, alto, objetivos);
 			escenario = Generador_Habitaciones.GenerarHabitaciones(ancho, alto, ref objetivos);
+			//escenario = Generador_Escenario2.generarEscenario(ancho, alto, objetivos);
 			PrepararJugadores(nj);
 			TCODConsole.root.setBackgroundColor(TCODColor.darkestGrey);
 			TCODConsole.root.clear();
@@ -424,7 +425,7 @@ namespace PruebasMarkov2 {
 				  Random R = new Random();
 				  if (turno % jugadores.Length == 1) {
 					 float[] vobj;
-					 Objetivo obj_p0 = InferirObjetivo(jugadores[0], 5, 0.25f, out vobj);
+					 Objetivo obj_p0 = InferirObjetivo(jugadores[0], 8, 0.45f, out vobj);
 					 if (obj_p0 == null) {
 						obj_p0 = objetivos[R.Next(0, objetivos.Length)];
 					 }
@@ -563,7 +564,7 @@ namespace PruebasMarkov2 {
 		 informacion += "Inferencia de objetivos:\n";
 		 float[] valores;
 		 foreach (Jugador jugador in jugadores) {
-			InferirObjetivo(jugador, 20, 0.25f, out valores);
+			InferirObjetivo(jugador, 8, 0.45f, out valores);
 			informacion += "  " + jugador.nombre + ":\n";
 			foreach (Objetivo objetivo in objetivos) {
 			   informacion += objetivo.representacion + " (" + Math.Round(valores[objetivo.id], 2) + ") ";
@@ -823,8 +824,8 @@ namespace PruebasMarkov2 {
 		 Accion.direccion_complementaria.Add(TDireccion.DR, TDireccion.UL);
 		 Accion.direccion_complementaria.Add(TDireccion.DL, TDireccion.UR);
 
-		 int ancho = 15;
-		 int alto = 15;
+		 int ancho = 10;
+		 int alto = 10;
 
 		 Juego juego = new Juego(ancho, alto, 2, 4);
 	  }
