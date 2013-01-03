@@ -54,12 +54,12 @@
     <Compile Include="Arbol_Estados.cs" />
     <Compile Include="Estado.cs" />
     <Compile Include="Generador_Escenario.cs" />
+    <Compile Include="Generador_Escenario2.cs" />
     <Compile Include="Generador_Habitaciones.cs" />
     <Compile Include="MDP.cs" />
     <Compile Include="Prototipo2.cs" />
     <Compile Include="ResolucionMDP.cs" />
     <None Include="app.config" />
-    <None Include="Backup" />
     <None Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
