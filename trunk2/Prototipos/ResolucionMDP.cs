@@ -5,14 +5,7 @@ namespace PruebasMarkov2 {
 	  public class TransicionJuego : Transicion_MDP<Arbol_Estados.Nodo_Estado, Accion> {
 		 public override float valor(Accion a, Arbol_Estados.Nodo_Estado s, Arbol_Estados.Nodo_Estado sp) {
 			if (s.estados_hijos != null) {
-			   int indice = s.estados_hijos.IndexOf(sp);
-
-			   if ((indice >= 0) && (s.acciones_hijos[indice] == a)) {
-				  //return (1f / s.acciones_hijos.Count);
-				  return 1f;
-			   }
-			   else
-				  return 0f;
+			   return s.probabilidadHijoAccion(sp, a);
 			}
 			else {
 			   // Nunca deberia llegar por aca.

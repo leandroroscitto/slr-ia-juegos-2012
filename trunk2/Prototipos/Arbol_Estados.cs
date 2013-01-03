@@ -12,6 +12,7 @@ namespace PruebasMarkov2 {
 		 public List<Nodo_Estado> estados_hijos;
 		 // <id_jugador, estados>
 		 public Dictionary<int, List<Nodo_Estado>> estados_hijos_actor;
+		 public List<float> estados_hijos_probabilidad;
 		 public List<Accion> acciones_padres;
 		 // <id_jugador, acciones>
 		 public Dictionary<int, List<Accion>> acciones_padres_actor;
@@ -25,6 +26,7 @@ namespace PruebasMarkov2 {
 			estados_padres_actor = new Dictionary<int, List<Nodo_Estado>>();
 			estados_hijos = new List<Nodo_Estado>();
 			estados_hijos_actor = new Dictionary<int, List<Nodo_Estado>>();
+			estados_hijos_probabilidad = new List<float>();
 			acciones_padres = new List<Accion>();
 			acciones_padres_actor = new Dictionary<int, List<Accion>>();
 			acciones_hijos = new List<Accion>();
@@ -38,9 +40,10 @@ namespace PruebasMarkov2 {
 			}
 		 }
 
-		 public int AgregarHijo(Nodo_Estado h, Accion ja) {
+		 public int AgregarHijo(Nodo_Estado h, Accion ja, float probabilidad) {
 			estados_hijos.Add(h);
 			estados_hijos_actor[ja.actor_id].Add(h);
+			estados_hijos_probabilidad.Add(probabilidad);
 			acciones_hijos.Add(ja);
 			acciones_hijos_actor[ja.actor_id].Add(ja);
 
@@ -55,6 +58,16 @@ namespace PruebasMarkov2 {
 			acciones_padres_actor[ja.actor_id].Add(ja);
 
 			return estados_padres.Count - 1;
+		 }
+
+		 public float probabilidadHijoAccion(Nodo_Estado s, Accion a) {
+			int indice = estados_hijos.IndexOf(s);
+			if (indice >= 0 && acciones_hijos[indice] == a) {
+			   return estados_hijos_probabilidad[indice];
+			}
+			else {
+			   return 0;
+			}
 		 }
 
 		 public override Estado_MDP hijoAccion(Accion_MDP a) {
@@ -100,7 +113,7 @@ namespace PruebasMarkov2 {
 	  public Juego.Objetivo[] objetivos;
 	  public Juego.Jugador[] jugadores;
 	  public List<Accion> acciones_individuales;
-	  // <numero_objetivos_cumplidos, <posicion_player_0, nodo_estado>>
+	  // <numero_objetivos_cumplidos, <posicion_playes, nodo_estado>>
 	  public Dictionary<int, Dictionary<Vector2[], List<Nodo_Estado>>> estados_dict;
 	  public List<Nodo_Estado> estados;
 	  public Nodo_Estado nodo_estado_inicial;
@@ -158,6 +171,7 @@ namespace PruebasMarkov2 {
 				  bool en_visitado = false;
 				  bool en_frontera = false;
 				  Nodo_Estado proximo_estado_nodo = BuscarProximoEstado(nodo_estado_actual, jugadores[ja_jugador_id], nueva_posicion, out en_visitado, out en_frontera);
+
 				  // Si no existe el proximo estado en niguna lista, lo crea.
 				  if (proximo_estado_nodo == null) {
 					 cant_estados++;
@@ -178,10 +192,9 @@ namespace PruebasMarkov2 {
 				  }
 
 				  // Verificar si pertenezca a 'estados' o es igual que el estado actual.
-				  // Si pertence, no hacer nada, la relacion padre-hijo ya tendria que haber sido establecida.
 				  if (!en_visitado) {
 					 // Si no pertenece, establecer la relacion padre-hijo.
-					 nodo_estado_actual.AgregarHijo(proximo_estado_nodo, jugador_accion);
+					 nodo_estado_actual.AgregarHijo(proximo_estado_nodo, jugador_accion, 1.0f);
 
 					 // Verifica si ya se encuentra en la frontera. De no ser asi lo agrega.
 					 if (!en_frontera) {
@@ -190,7 +203,7 @@ namespace PruebasMarkov2 {
 					 }
 				  }
 				  else {
-					 nodo_estado_actual.AgregarHijo(proximo_estado_nodo, jugador_accion);
+					 nodo_estado_actual.AgregarHijo(proximo_estado_nodo, jugador_accion, 1.0f);
 				  }
 			   }
 			}

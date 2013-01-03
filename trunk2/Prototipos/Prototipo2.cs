@@ -347,8 +347,8 @@ namespace PruebasMarkov2 {
 				  Accion accion = resolucion.mdp.Politica[jugador.id][objetivo.id][nodo.estado_actual.id];
 				  Accion accion_jugador;
 				  if (jugador.acciones.TryGetValue(t, out accion_jugador) && accion.id == accion_jugador.id) {
-					 valor_objetivo[objetivo.id] += 1000 * descuento;
-					 suma += 1000 * descuento;
+					 valor_objetivo[objetivo.id] += descuento;
+					 suma += descuento;
 				  }
 			   }
 			}
@@ -363,13 +363,11 @@ namespace PruebasMarkov2 {
 			float max_valor = float.MinValue;
 			int objetivo_id = -1;
 			for (int i = 0; i < valor_objetivo.Length; i++) {
-			   //Console.WriteLine("Objetivo: " + objetivos[i].representacion + ", valor: " + valor_objetivo[i] + ".");
-			   if (valor_objetivo[i] > max_valor) {
+			   if (!objetivos[i].cumplido && valor_objetivo[i] > max_valor) {
 				  max_valor = valor_objetivo[i];
 				  objetivo_id = i;
 			   }
 			}
-			//Console.WriteLine();
 
 			if (objetivo_id != -1) {
 			   return objetivos[objetivo_id];
