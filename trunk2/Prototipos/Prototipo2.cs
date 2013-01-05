@@ -8,6 +8,7 @@ namespace PruebasMarkov2 {
 	  public int x;
 	  public int y;
 	  public static TCODPath mapa_dist;
+	  public static TCODDijkstra mapa_dist_d;
 
 	  public static Vector2 cero = new Vector2(0, 0);
 
@@ -142,6 +143,7 @@ namespace PruebasMarkov2 {
 
 	  public TCODMap mapa_fov;
 	  public TCODPath mapa_dist;
+	  public TCODDijkstra mapa_dist_d;
 
 	  public List<Accion> acciones_posibles;
 	  public List<string> log_acciones;
@@ -177,6 +179,7 @@ namespace PruebasMarkov2 {
 		 PrepararAcciones();
 		 PrepararMapaFov();
 		 Vector2.mapa_dist = mapa_dist;
+		 Vector2.mapa_dist_d = mapa_dist_d;
 
 		 arbol_estados = new Arbol_Estados(ref escenario, ref jugadores, ref acciones_posibles, ref objetivos);
 		 resolucion = new ResolucionMDP(ref arbol_estados);
@@ -310,8 +313,8 @@ namespace PruebasMarkov2 {
 		 bool continuar = false;
 		 while (!continuar) {
 			//escenario = Generador_Escenario.generarEscenario(ancho, alto, objetivos);
-			escenario = Generador_Habitaciones.GenerarHabitaciones(ancho, alto, ref objetivos);
-			//escenario = Generador_Escenario2.generarEscenario(ancho, alto, objetivos);
+			//escenario = Generador_Habitaciones.GenerarHabitaciones(ancho, alto, ref objetivos);
+			escenario = Generador_Escenario2.generarEscenario(ancho, alto, objetivos);
 			PrepararJugadores(nj);
 			TCODConsole.root.setBackgroundColor(TCODColor.darkestGrey);
 			TCODConsole.root.clear();
@@ -331,6 +334,7 @@ namespace PruebasMarkov2 {
 			}
 		 }
 		 mapa_dist = new TCODPath(mapa_fov, 1.0f);
+		 mapa_dist_d = new TCODDijkstra(mapa_fov, 1.0f);
 	  }
 
 	  // Acciones.
@@ -822,8 +826,8 @@ namespace PruebasMarkov2 {
 		 Accion.direccion_complementaria.Add(TDireccion.DR, TDireccion.UL);
 		 Accion.direccion_complementaria.Add(TDireccion.DL, TDireccion.UR);
 
-		 int ancho = 10;
-		 int alto = 10;
+		 int ancho = 15;
+		 int alto = 15;
 
 		 Juego juego = new Juego(ancho, alto, 2, 4);
 	  }

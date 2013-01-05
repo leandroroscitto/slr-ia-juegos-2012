@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using libtcod;
 
 namespace PruebasMarkov2 {
    public abstract class Estado_MDP {
@@ -24,6 +23,7 @@ namespace PruebasMarkov2 {
    }
    public abstract class Recompensa_MDP<S, O> {
 	  public abstract float valor(S s, O o, int actor_id);
+	  public abstract Vector2 posicion_objetivo(O obj);
    }
 
    public class MDP<S, A, O, T, R>
@@ -63,6 +63,7 @@ namespace PruebasMarkov2 {
 
 		 //Calcular_Utilidad_VI();
 		 Calcular_Utilidad_PI();
+		 //Calcular_Utilidad_Dijkstra();
 
 		 float max_utilidad = float.MinValue;
 		 for (int i = 0; i < Utilidad.Length; i++) {
@@ -79,6 +80,53 @@ namespace PruebasMarkov2 {
 				  Utilidad[i][j][q] /= max_utilidad;
 			   }
 			}
+		 }
+	  }
+
+	  public void Calcular_Utilidad_Dijkstra() {
+		 Utilidad = new float[numero_actores][][];
+		 Politica = new A[numero_actores][][];
+		 for (int actor_id = 0; actor_id < numero_actores; actor_id++) {
+			Utilidad[actor_id] = new float[objetivos.Count][];
+			Politica[actor_id] = new A[objetivos.Count][];
+			for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
+			   Utilidad[actor_id][objetivo_id] = new float[estados.Count];
+			   Politica[actor_id][objetivo_id] = new A[estados.Count];
+			   foreach (S estado in estados) {
+				  Politica[actor_id][objetivo_id][estado.id] = null;
+				  Utilidad[actor_id][objetivo_id][estado.id] = 0;
+			   }
+			}
+		 }
+
+		 foreach (Estado_MDP estado in estados) {
+			Arbol_Estados.Nodo_Estado nodo_estado = (Arbol_Estados.Nodo_Estado)estado;
+			for (int actor_id = 0; actor_id < numero_actores; actor_id++) {
+			   for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
+				  A mejor_accion = null;
+				  int menor_distancia = int.MaxValue;
+				  foreach (A accion in estado.accionesValidas(actor_id)) {
+					 Arbol_Estados.Nodo_Estado nodo_estado_hijo = (Arbol_Estados.Nodo_Estado)estado.hijoAccion(accion);
+					 Vector2 posicion_actor = nodo_estado_hijo.estado_actual.posicion_jugadores[actor_id];
+					 Vector2 posicion_objetivo = recompensa.posicion_objetivo(objetivos[objetivo_id]);
+					 if (posicion_actor.Equals(posicion_objetivo)) {
+						mejor_accion = accion;
+						menor_distancia = 0;
+					 }
+					 else {
+						Vector2.mapa_dist.compute(posicion_actor.x, posicion_actor.y, posicion_objetivo.x, posicion_objetivo.y);
+						int distancia = Vector2.mapa_dist.size();
+						if (!Vector2.mapa_dist.isEmpty() && distancia < menor_distancia) {
+						   mejor_accion = accion;
+						   menor_distancia = distancia;
+						}
+					 }
+				  }
+				  Politica[actor_id][objetivo_id][estado.id] = mejor_accion;
+			   }
+			}
+
+			System.Console.WriteLine("Progreso: " + (estado.id * 100f / estados.Count) + "%.");
 		 }
 	  }
 
@@ -158,7 +206,6 @@ namespace PruebasMarkov2 {
 				  }
 			   }
 
-
 			   float[][] value_policy = new float[numero_actores][];
 			   for (int actor = 0; actor < numero_actores; actor++) {
 				  value_policy[actor] = new float[objetivos.Count];
@@ -190,7 +237,7 @@ namespace PruebasMarkov2 {
 
 			   float porcentaje = (i.id * 100f / estados.Count);
 
-			   if (porcentaje % 10 <= 0.1 && porcentaje/10 > (10-cont_porcentaje)) {
+			   if (porcentaje % 10 <= 0.1 && porcentaje / 10 > (10 - cont_porcentaje)) {
 				  Console.WriteLine("Progreso: " + (int)porcentaje + ", diferencia: " + diferencia_total);
 				  cont_porcentaje--;
 			   }
@@ -225,7 +272,13 @@ namespace PruebasMarkov2 {
 			}
 		 }
 
+		 float[][] value_max = new float[numero_actores][];
+		 for (int actor = 0; actor < numero_actores; actor++) {
+			value_max[actor] = new float[objetivos.Count];
+		 }
+
 		 do {
+			int cont_porcentaje = 10;
 			for (int actor = 0; actor < Utilidad_Aux.Length; actor++) {
 			   for (int objetivo = 0; objetivo < Utilidad_Aux[actor].Length; objetivo++) {
 				  for (int estado = 0; estado < Utilidad_Aux[actor][objetivo].Length; estado++) {
@@ -236,32 +289,29 @@ namespace PruebasMarkov2 {
 
 			int count = 0;
 			foreach (S i in estados) {
-			   float[][] value_max = new float[numero_actores][];
 			   for (int actor = 0; actor < numero_actores; actor++) {
-				  value_max[actor] = new float[objetivos.Count];
 				  for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
 					 value_max[actor][objetivo_id] = float.MinValue;
-				  }
-			   }
+					 foreach (A a in i.accionesValidas(actor)) {
+						//float value = 0;
+						//foreach (S j in i.proximosEstados(a.actor_id)) {
+						//   value += transicion.valor(a, i, j) * Utilidad_Aux[a.actor_id][objetivo_id][j.id];
+						//}
+						float value = transicion.valor(a, i, (S)i.hijoAccion(a)) * Utilidad_Aux[actor][objetivo_id][i.hijoAccion(a).id];
+						if (value > value_max[actor][objetivo_id]) {
+						   value_max[actor][objetivo_id] = value;
+						   Politica_Aux[actor][objetivo_id][i.id] = a;
+						}
 
-			   for (int objetivo_id = 0; objetivo_id < objetivos.Count; objetivo_id++) {
-				  foreach (A a in i.accionesValidas(-1)) {
-					 float value = 0;
-					 foreach (S j in i.proximosEstados(a.actor_id)) {
-						value += transicion.valor(a, i, j) * Utilidad_Aux[a.actor_id][objetivo_id][j.id];
+						count++;
+						float porcentaje = (100 * (count * 1f / (estados.Count * acciones.Count * numero_actores)));
+						if (porcentaje % 10 <= 0.1 && porcentaje / 10 > (10 - cont_porcentaje)) {
+						   Console.WriteLine("Progreso: " + (int)porcentaje);
+						   cont_porcentaje--;
+						}
 					 }
-					 if (value > value_max[a.actor_id][objetivo_id]) {
-						value_max[a.actor_id][objetivo_id] = value;
-						Politica_Aux[a.actor_id][objetivo_id][i.id] = a;
-					 }
-					 count++;
-					 float porcentaje = (100 * (count * 1f / (estados.Count * acciones.Count * numero_actores)));
-					 if (porcentaje % 10 == 0)
-						Console.WriteLine("Completado: " + porcentaje);
-				  }
 
-				  for (int actor = 0; actor < numero_actores; actor++) {
-					 Utilidad_Aux[actor][objetivo_id][i.id] = recompensa.valor(i, objetivos[objetivo_id], actor) + value_max[actor][objetivo_id];
+					 Utilidad_Aux[actor][objetivo_id][i.id] = recompensa.valor(i, objetivos[objetivo_id], actor) + factor_descuento * value_max[actor][objetivo_id];
 				  }
 			   }
 			}

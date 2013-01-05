@@ -39,7 +39,6 @@ namespace PruebasMarkov2 {
 		 }
 
 		 public override bool visitNode(TCODBsp node) {
-			int offset = 2;
 			if (node.isLeaf() && TCODRandom.getInstance().getGaussianRangeFloat(0, 1) < prob_aceptar) {
 			   int x, y, w, h;
 			   TCODRandom rng = TCODRandom.getInstance();
@@ -54,6 +53,8 @@ namespace PruebasMarkov2 {
 				  dig(lastx, lasty, x + w / 2, lasty);
 				  dig(x + w / 2, lasty, x + w / 2, y + h / 2);
 			   }
+			   lastx = x+w/2;
+			   lasty = y+h/2;
 			}
 
 			return true;
@@ -118,7 +119,7 @@ namespace PruebasMarkov2 {
 		 return suma;
 	  }
 
-	  public static int ROOM_MAX_SIZE = 6;
+	  public static int ROOM_MAX_SIZE = 4;
 	  public static int ROOM_MIN_SIZE = 2;
 
 	  public static Zona[][] generarEscenario(int an, int al, Juego.Objetivo[] objs) {

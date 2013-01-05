@@ -23,6 +23,10 @@ namespace PruebasMarkov2 {
 			objetivos = objs;
 		 }
 
+		 public override Vector2 posicion_objetivo(Juego.Objetivo obj) {
+			return obj.posicion;
+		 }
+
 		 public override float valor(Arbol_Estados.Nodo_Estado s, Juego.Objetivo o, int actor_id) {
 			float resultado;
 			resultado = (s.estado_actual.escenario_base.Length * s.estado_actual.escenario_base[0].Length) * 2;

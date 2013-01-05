@@ -173,7 +173,7 @@ namespace PruebasMarkov2 {
 			   if (posicion_objetivo.x >= an - 1)
 				  posicion_objetivo.x--;
 
-			   resultado[posicion_objetivo.y][posicion_objetivo.x] = objetivo;
+			   resultado[posicion_objetivo.x][posicion_objetivo.y] = objetivo;
 			   objetivo.posicion = posicion_objetivo;
 			}
 
