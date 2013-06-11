@@ -32,6 +32,107 @@ namespace PruebasMarkov2 {
 			return -1;
 	  }
 
+	  public static int distancia_direccion(TDireccion dir1, TDireccion dir2) {
+		 if (dir1 == dir2)
+			return 0;
+		 else {
+			switch (dir1) {
+			   case TDireccion.C:
+				  return 1;
+			   case TDireccion.D:
+				  if (dir2 == TDireccion.DL || dir2 == TDireccion.DR)
+					 return 1;
+				  else if (dir2 == TDireccion.L || dir2 == TDireccion.R)
+					 return 2;
+				  else if (dir2 == TDireccion.UL || dir2 == TDireccion.UR)
+					 return 3;
+				  else if (dir2 == TDireccion.U)
+					 return 4;
+				  else
+					 return 1;
+			   case TDireccion.U:
+				  if (dir2 == TDireccion.DL || dir2 == TDireccion.DR)
+					 return 3;
+				  else if (dir2 == TDireccion.L || dir2 == TDireccion.R)
+					 return 2;
+				  else if (dir2 == TDireccion.UL || dir2 == TDireccion.UR)
+					 return 1;
+				  else if (dir2 == TDireccion.D)
+					 return 4;
+				  else
+					 return 1;
+			   case TDireccion.L:
+				  if (dir2 == TDireccion.DL || dir2 == TDireccion.UL)
+					 return 1;
+				  else if (dir2 == TDireccion.U || dir2 == TDireccion.D)
+					 return 2;
+				  else if (dir2 == TDireccion.DR || dir2 == TDireccion.UR)
+					 return 3;
+				  else if (dir2 == TDireccion.R)
+					 return 4;
+				  else
+					 return 1;
+			   case TDireccion.R:
+				  if (dir2 == TDireccion.DL || dir2 == TDireccion.UL)
+					 return 3;
+				  else if (dir2 == TDireccion.U || dir2 == TDireccion.D)
+					 return 2;
+				  else if (dir2 == TDireccion.DR || dir2 == TDireccion.UR)
+					 return 1;
+				  else if (dir2 == TDireccion.L)
+					 return 4;
+				  else
+					 return 1;
+			   case TDireccion.DL:
+				  if (dir2 == TDireccion.L || dir2 == TDireccion.D)
+					 return 1;
+				  else if (dir2 == TDireccion.U || dir2 == TDireccion.R)
+					 return 3;
+				  else if (dir2 == TDireccion.UL || dir2 == TDireccion.DR)
+					 return 2;
+				  else if (dir2 == TDireccion.UR)
+					 return 4;
+				  else
+					 return 1;
+			   case TDireccion.UR:
+				  if (dir2 == TDireccion.L || dir2 == TDireccion.D)
+					 return 3;
+				  else if (dir2 == TDireccion.U || dir2 == TDireccion.R)
+					 return 1;
+				  else if (dir2 == TDireccion.UL || dir2 == TDireccion.DR)
+					 return 2;
+				  else if (dir2 == TDireccion.DL)
+					 return 4;
+				  else
+					 return 1;
+			   case TDireccion.UL:
+				  if (dir2 == TDireccion.R || dir2 == TDireccion.D)
+					 return 3;
+				  else if (dir2 == TDireccion.U || dir2 == TDireccion.L)
+					 return 1;
+				  else if (dir2 == TDireccion.DL || dir2 == TDireccion.UR)
+					 return 2;
+				  else if (dir2 == TDireccion.DR)
+					 return 4;
+				  else
+					 return 1;
+			   case TDireccion.DR:
+				  if (dir2 == TDireccion.R || dir2 == TDireccion.D)
+					 return 1;
+				  else if (dir2 == TDireccion.U || dir2 == TDireccion.L)
+					 return 3;
+				  else if (dir2 == TDireccion.DL || dir2 == TDireccion.UR)
+					 return 2;
+				  else if (dir2 == TDireccion.UL)
+					 return 4;
+				  else
+					 return 1;
+			   default:
+				  return 0;
+			}
+		 }
+	  }
+
 	  public override bool Equals(object obj) {
 		 Vector2 vector = (Vector2)obj;
 		 return ((vector.x == x) && (vector.y == y));
@@ -96,7 +197,6 @@ namespace PruebasMarkov2 {
 			return "Objetivo_id: " + id + ", cumplido: " + cumplido + ", complementario_id: " + complementario.id;
 		 }
 	  }
-
 	  public class Jugador {
 		 public enum TControl {
 			DIRECTO, IA
@@ -175,7 +275,7 @@ namespace PruebasMarkov2 {
 
 		 PrepararObjetivos(no);
 		 PrepararEscenario(nj);
-		 //PrepararJugadores(nj);
+		 PrepararJugadores(nj);
 		 PrepararAcciones();
 		 PrepararMapaFov();
 		 Vector2.mapa_dist = mapa_dist;
